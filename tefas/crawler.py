@@ -71,7 +71,7 @@ def _update_session_data(res, data):
 
 
 def _parse_table(content, table_id):
-    bs = BeautifulSoup(content)
+    bs = BeautifulSoup(content, features="html.parser")
     table = bs.find("table", attrs={"id": table_id})
     data = []
     rows = table.find_all("tr")
