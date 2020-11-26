@@ -1,5 +1,7 @@
 """Tefas Crawler"""
 
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -84,6 +86,27 @@ def _parse_table(content, table_id):
     return data
 
 
+def _parse_date(date):
+    if isinstance(date, datetime):
+        formatted = datetime.strftime(date, "%d.%m.%Y")
+    elif isinstance(date, str):
+        try:
+            parsed = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError(
+                "Date string format is incorrect. "
+                "It should be `YYYY-MM-DD`"
+            ) from exc
+        else:
+            formatted = datetime.strftime(parsed, "%d.%m.%Y")
+    else:
+        raise ValueError(
+            "`date` should be a string like 'YYYY-MM-DD' "
+            "or a `datetime.datetime` object."
+        )
+    return formatted
+
+
 class Crawler:
     """Fetch public fund information from ``https://www.tefas.gov.tr``.
 
@@ -140,6 +163,7 @@ class Crawler:
 
     def fetch(self, date):
         """"""
+        date = _parse_date(date)
         # Get first page
         data = self.initial_form_data
         for field in FORM_DATA_DATE_FIELDS:
