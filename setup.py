@@ -1,6 +1,8 @@
 import pathlib
 from setuptools import setup
 
+from tefas import __version__
+
 # The directory containing this file
 HOME = pathlib.Path(__file__).parent
 
@@ -13,7 +15,7 @@ install_requires = (HOME / "requirements.txt").read_text().splitlines()
 # Call setup()
 setup(
     name="tefas-crawler",
-    version="0.1",
+    version=__version__,
     description="Crawl the public data from Tefas.",
     long_description=long_description,
     long_description_content_type="text/markdown",
