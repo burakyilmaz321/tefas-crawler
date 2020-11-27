@@ -62,6 +62,7 @@ FORM_DATA_DATE_FIELDS = {
     "ctl00$MainContent$HTarihselBitTarih",
 }
 
+
 def _update_session_data(res, data):
     soup = BeautifulSoup(res.text, features="html.parser")
     updated_data = {
@@ -158,7 +159,10 @@ class Crawler:
         self.session = requests.Session()
         res = self.session.get(self.endpoint)
         self.cookies = self.session.cookies.get_dict()
-        self.initial_form_data = {**FORM_DATA, **_update_session_data(res, SESSION_DATA)}
+        self.initial_form_data = {
+            **FORM_DATA,
+            **_update_session_data(res, SESSION_DATA),
+        }
 
     def fetch(self, date: Union[str, datetime]) -> List[Dict]:
         """ Main entry point of the public API. Get fund information.
