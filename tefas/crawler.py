@@ -1,6 +1,7 @@
 """Tefas Crawler"""
 
 from datetime import datetime
+from typing import Dict, List, Union
 
 import requests
 from bs4 import BeautifulSoup
@@ -110,8 +111,6 @@ def _parse_date(date):
 class Crawler:
     """Fetch public fund information from ``https://www.tefas.gov.tr``.
 
-    Attributes:
-
     Examples:
 
     >>> tefas = Crawler()
@@ -161,8 +160,15 @@ class Crawler:
         self.cookies = self.session.cookies.get_dict()
         self.initial_form_data = {**FORM_DATA, **_update_session_data(res, SESSION_DATA)}
 
-    def fetch(self, date):
-        """"""
+    def fetch(self, date: Union[str, datetime]) -> List[Dict]:
+        """ Main entry point of the public API. Get fund information.
+
+        Args:
+            date: The date that fund imformation is crawled for.
+
+        Returns:
+            A list of dictionary where each element is the information for a fund.
+        """
         date = _parse_date(date)
         # Get first page
         data = self.initial_form_data

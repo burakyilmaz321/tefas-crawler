@@ -1,4 +1,4 @@
-from tefas.crawler import Crawler
+from tefas import Crawler
 
 
 def test_crawler():
