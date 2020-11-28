@@ -1,5 +1,11 @@
 # Tefas Crawler
 
+[![PyPI version](https://badge.fury.io/py/tefas-crawler.svg)](https://pypi.org/project/tefas-crawler)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Versions](https://img.shields.io/pypi/pyversions/tefas-crawler)](https://pypi.org/project/tefas-crawler)
+[![Package Status](https://img.shields.io/pypi/status/tefas-crawler)](https://pypi.org/project/tefas-crawler)
+[![CI Build](https://github.com/burakyilmaz321/tefas-crawler/workflows/Python%20package/badge.svg)](https://github.com/burakyilmaz321/tefas-crawler/actions)
+
 Crawl public fund information from [Tefas](https://www.tefas.gov.tr) with ease.
 
 # Installation
