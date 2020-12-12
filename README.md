@@ -6,7 +6,7 @@
 [![Package Status](https://img.shields.io/pypi/status/tefas-crawler)](https://pypi.org/project/tefas-crawler)
 [![CI Build](https://github.com/burakyilmaz321/tefas-crawler/workflows/Python%20package/badge.svg)](https://github.com/burakyilmaz321/tefas-crawler/actions)
 
-Crawl public fund information from [Tefas](https://www.tefas.gov.tr) with ease.
+Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](https://www.tefas.gov.tr) (TEFAS) with ease.
 
 # Installation
 
