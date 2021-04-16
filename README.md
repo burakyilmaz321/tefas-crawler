@@ -40,13 +40,13 @@ This should return all fund information for the given day as a list of dictionar
 [
     {
         'Tarih': '20.11.2020',
-        'FonKodu': 'AAK',
+        'Fon Kodu': 'AAK',
         'Fon Adı': 'ATA PORTFÖY ÇOKLU VARLIK DEĞİŞKEN FON',
-        'Fiyat': '41,302235',
-        'TedavüldekiPaySayısı': '1.898.223,00',
-        'KişiSayısı': '422',
-        'Fon Toplam Değer': '78.400.851,68'},
-        'Banka Bonosu (%)': '0,00',
+        'Fiyat': 41.302235,
+        'TedavüldekiPaySayısı': 1898223.00,
+        'KişiSayısı': 422.0,
+        'Fon Toplam Değer': 78400851.68},
+        'Banka Bonosu (%)': 0.00,
         ...
     },
     ...
@@ -60,12 +60,38 @@ As of today, we support the following data schema from [Tefas](https://www.tefas
 | Column | Description | Type |
 |---|---|---|
 | Tarih | Date | `string`|
-| FonKodu | Short code of the fund | `string` |
+| Fon Kodu | Short code of the fund | `string` |
 | Fon Adı | Full name of the fund | `string` |
-| Fiyat | Price of the fund | `string` |
-| TedavüldekiPaySayısı | Number of shares | `string` |
-| KişiSayısı | Number of participants | `string` |
-| Fon Toplam Değer | Total value | `string` |
+| Fiyat | Price of the fund | `float` |
+| TedavüldekiPaySayısı | Number of shares | `float` |
+| KişiSayısı | Number of participants | `float` |
+| Fon Toplam Değer | Total value | `float` |
+| Banka Bonosu (%) | .. | `float` |
+| Diğer (%) | .. | `float` |
+| Döviz Ödemeli Bono (%) | .. | `float` |
+| Devlet Tahvili (%) | .. | `float` |
+| Dövize Ödemeli Tahvil (%) | .. | `float` |
+| Eurobonds (%) | .. | `float` |
+| Finansman Bonosu (%) | .. | `float` |
+| Fon Katılma Belgesi (%) | .. | `float` |
+| Gayrı Menkul Sertifikası (%) | .. | `float` |
+| Hazine Bonosu (%) | .. | `float` |
+| Hisse Senedi (%) | .. | `float` |
+| Kamu Dış Borçlanma Araçları (%) | .. | `float` |
+| Katılım Hesabı (%) | .. | `float` |
+| Kamu Kira Sertifikaları (%) | .. | `float` |
+| Kıymetli Madenler (%) | .. | `float` |
+| Özel Sektör Kira Sertifikaları (%) | .. | `float` |
+| Özel Sektör Tahvili (%) | .. | `float` |
+| Repo (%) | .. | `float` |
+| Türev Araçları (%) | .. | `float` |
+| TPP (%) | .. | `float` |
+| Ters-Repo (%) | .. | `float` |
+| Varlığa Dayalı Menkul Kıymetler (%) | .. | `float` |
+| Vadeli Mevduat (%) | .. | `float` |
+| Yabancı Borçlanma Aracı (%) | .. | `float` |
+| Yabancı Hisse Senedi (%) | .. | `float` |
+| Yabancı Menkul Kıymet (%) | .. | `float` |
 
 ## To-do
 
@@ -76,11 +102,6 @@ Below API is planned but not implemented yet.
 - `fetch(date="2020-11-20", fund="AAK")` A single fund's inormation for a given day.
 - `fetch(start_date="2020-11-19", end_date="2020-11-20")` All fund information for a given date range.
 - `fetch(start_date="2020-11-19", end_date="2020-11-20", fund="AAK")` A single fund's information for a given date range.
-
-**Data Schema**
-
-- Map each field to an appropriate data type instead of string.
-- Add the "distribution" pane.
 
 ## License
 
