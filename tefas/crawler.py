@@ -5,6 +5,8 @@ from typing import Dict, List, Union
 
 import requests
 
+from tefas.schema import REQUIRED_FIELDS
+
 
 def _merge_tables(
     left: List[Dict], right: List[Dict], left_on: List[str], right_on: List[str]
@@ -149,7 +151,10 @@ class Crawler:
         info = self._do_post(self.info_endpoint, data)
         detail = self._do_post(self.detail_endpoint, data)
         merged = _merge_tables(info, detail, "FONKODU", "Fon Kodu")
-        return _map_fields(merged)
+        merged = _map_fields(merged)
+        # Make sure final data has all required fields
+        merged = [{f: d.setdefault(f) for f in REQUIRED_FIELDS} for d in merged]
+        return merged
 
     def _do_post(self, endpoint: str, data: Dict[str, str]) -> Dict[str, str]:
         # TODO: error handling. this is quiet fishy now.
