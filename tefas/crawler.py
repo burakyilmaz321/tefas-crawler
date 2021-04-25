@@ -147,7 +147,9 @@ class Crawler:
             "bittarih": date,
         }
         info = self._do_post(self.info_endpoint, data)
+        print("info", set(info[0].keys()))
         detail = self._do_post(self.detail_endpoint, data)
+        print("detail", set(detail[0].keys()))
         merged = _merge_tables(info, detail, "FONKODU", "Fon Kodu")
         return _map_fields(merged)
 
@@ -160,3 +162,4 @@ class Crawler:
             headers=self.headers,
         )
         return response.json().get("data", {})
+
