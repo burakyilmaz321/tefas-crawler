@@ -151,6 +151,7 @@ class Crawler:
         detail = self._do_post(self.detail_endpoint, data)
         print("detail", set(detail[0].keys()))
         merged = _merge_tables(info, detail, "FONKODU", "Fon Kodu")
+        print("merged", set(merged[0].keys()))
         return _map_fields(merged)
 
     def _do_post(self, endpoint: str, data: Dict[str, str]) -> Dict[str, str]:
