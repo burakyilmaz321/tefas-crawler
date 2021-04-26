@@ -1,7 +1,7 @@
 """Data schema validation"""
 
 from tefas import Crawler
-from tefas.schema import REQUIRED_FIELDS
+from tefas.schema import Fields
 
 
 def test_data_schema():
@@ -9,4 +9,4 @@ def test_data_schema():
     crawler = Crawler()
     data = crawler.fetch("2020-11-20")
     for datum in data:
-        assert REQUIRED_FIELDS == set(datum.keys())
+        assert Fields.ALL == set(datum.keys())

@@ -6,7 +6,7 @@
 [![Package Status](https://img.shields.io/pypi/status/tefas-crawler)](https://pypi.org/project/tefas-crawler)
 [![CI Build](https://github.com/burakyilmaz321/tefas-crawler/workflows/Python%20package/badge.svg)](https://github.com/burakyilmaz321/tefas-crawler/actions)
 
-Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](https://www.tefas.gov.tr) (TEFAS) with ease.
+Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](http://www.fundturkey.com.tr) (TEFAS) with ease.
 
 # Installation
 
@@ -39,14 +39,12 @@ This should return all fund information for the given day as a list of dictionar
 ```
 [
     {
-        'Tarih': '20.11.2020',
-        'Fon Kodu': 'AAK',
-        'Fon Adı': 'ATA PORTFÖY ÇOKLU VARLIK DEĞİŞKEN FON',
-        'Fiyat': 41.302235,
-        'TedavüldekiPaySayısı': 1898223.00,
-        'KişiSayısı': 422.0,
-        'Fon Toplam Değer': 78400851.68},
-        'Banka Bonosu (%)': 0.00,
+        'code': 'PPF',
+        'title': 'AZİMUT PORTFÖY AKÇE SERBEST FON',
+        'date': datetime.date(2020, 11, 20),
+        'other': 0.0,
+        'government_bond': 0.0,
+        'eurobonds': 0.0,
         ...
     },
     ...
@@ -55,43 +53,43 @@ This should return all fund information for the given day as a list of dictionar
 
 ## Data Schema
 
-As of today, we support the following data schema from [Tefas](https://www.tefas.gov.tr):
+As of today, we support the following data schema from [Tefas](http://www.fundturkey.com.tr):
 
 | Column | Description | Type |
 |---|---|---|
-| Tarih | Date | `string`|
-| Fon Kodu | Short code of the fund | `string` |
-| Fon Adı | Full name of the fund | `string` |
-| Fiyat | Price of the fund | `float` |
-| TedavüldekiPaySayısı | Number of shares | `float` |
-| KişiSayısı | Number of participants | `float` |
-| Fon Toplam Değer | Total value | `float` |
-| Banka Bonosu (%) | .. | `float` |
-| Diğer (%) | .. | `float` |
-| Döviz Ödemeli Bono (%) | .. | `float` |
-| Devlet Tahvili (%) | .. | `float` |
-| Dövize Ödemeli Tahvil (%) | .. | `float` |
-| Eurobonds (%) | .. | `float` |
-| Finansman Bonosu (%) | .. | `float` |
-| Fon Katılma Belgesi (%) | .. | `float` |
-| Gayrı Menkul Sertifikası (%) | .. | `float` |
-| Hazine Bonosu (%) | .. | `float` |
-| Hisse Senedi (%) | .. | `float` |
-| Kamu Dış Borçlanma Araçları (%) | .. | `float` |
-| Katılım Hesabı (%) | .. | `float` |
-| Kamu Kira Sertifikaları (%) | .. | `float` |
-| Kıymetli Madenler (%) | .. | `float` |
-| Özel Sektör Kira Sertifikaları (%) | .. | `float` |
-| Özel Sektör Tahvili (%) | .. | `float` |
-| Repo (%) | .. | `float` |
-| Türev Araçları (%) | .. | `float` |
-| TPP (%) | .. | `float` |
-| Ters-Repo (%) | .. | `float` |
-| Varlığa Dayalı Menkul Kıymetler (%) | .. | `float` |
-| Vadeli Mevduat (%) | .. | `float` |
-| Yabancı Borçlanma Aracı (%) | .. | `float` |
-| Yabancı Hisse Senedi (%) | .. | `float` |
-| Yabancı Menkul Kıymet (%) | .. | `float` |
+| date | Sate | `datetime.date` |
+| price | Price of the fund for a given date | `string` |
+| code | Short code of the fund | `string` |
+| title | Full name of the fund | `string` |
+| market_cap | Total value of the fund | `float` |
+| number_of_shares | Number of outstanding shares | `float` |
+| number_of_investors | Number of participants | `float` |
+| tmm | Share of tmm | `float` |
+| repo | Share of repo | `float` |
+| other | Share of other | `float` |
+| stock | Share of stock | `float` |
+| eurobonds | Share of eurobonds | `float` |
+| bank_bills | Share of bank bills | `float` |
+| derivatives | Share of derivatives | `float` |
+| reverse_repo | Share of reverse-repo | `float` |
+| term_deposit | Share of term deposit | `float` |
+| treasury_bill | Share of treasury bill | `float` |
+| foreign_equity | Share of foreign equity | `float` |
+| government_bond | Share of government bond | `float` |
+| precious_metals | Share of precious metals | `float` |
+| commercial_paper | Share of commercial paper | `float` |
+| fx_payable_bills | Share of fx payable bills | `float` |
+| foreign_securities | Share of foreign securities | `float` |
+| private_sector_bond | Share of private sector bond | `float` |
+| participation_account | Share of participation account | `float` |
+| foreign_currency_bills | Share of foreign currency bills | `float` |
+| asset_backed_securities | Share of asset-backed securities | `float` |
+| real_estate_certificate | Share of real estate certificate | `float` |
+| foreign_debt_instruments | Share of foreign debt instruments | `float` |
+| government_lease_certificates | Share of government lease certificates | `float` |
+| fund_participation_certificate | Share of fund participation certificate | `float` |
+| government_bonds_and_bills_fx | Share of government bonds and bills (fx) | `float` |
+| private_sector_lease_certificates | Share of private sector lease certificates | `float` |
 
 ## To-do
 
