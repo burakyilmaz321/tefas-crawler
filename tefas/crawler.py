@@ -1,46 +1,15 @@
-"""Tefas Crawler"""
+"""Tefas Crawler
+
+Crawls public invenstment fund information from Turkey Electronic Fund Trading Platform.
+"""
 
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import requests
+import pandas as pd
 
-from tefas.schema import InfoSchema, BreakdownSchema, Fields
-
-
-def _merge_tables(left: List[Dict], right: List[Dict], on: str) -> List[Dict]:
-    """Merge two collection of objects if the values of given key match."""
-    left_dict = {row[on]: {k: v for k, v in row.items() if k != on} for row in left}
-    right_dict = {row[on]: {k: v for k, v in row.items() if k != on} for row in right}
-    merged_dict = {}
-    all_keys = set(left_dict.keys()).union(set(right_dict.keys()))
-    for key in all_keys:
-        left_ = left_dict.get(key, {}).copy()
-        right_ = right_dict.get(key, {}).copy()
-        left_.update(right_)
-        merged_dict[key] = left_
-    merged_table = [{on: k, **v} for k, v in merged_dict.items()]
-    return merged_table
-
-
-def _parse_date(date: Union[str, datetime]) -> str:
-    if isinstance(date, datetime):
-        formatted = datetime.strftime(date, "%d.%m.%Y")
-    elif isinstance(date, str):
-        try:
-            parsed = datetime.strptime(date, "%Y-%m-%d")
-        except ValueError as exc:
-            raise ValueError(
-                "Date string format is incorrect. " "It should be `YYYY-MM-DD`"
-            ) from exc
-        else:
-            formatted = datetime.strftime(parsed, "%d.%m.%Y")
-    else:
-        raise ValueError(
-            "`date` should be a string like 'YYYY-MM-DD' "
-            "or a `datetime.datetime` object."
-        )
-    return formatted
+from tefas.schema import InfoSchema, BreakdownSchema
 
 
 class Crawler:
@@ -49,17 +18,21 @@ class Crawler:
     Examples:
 
     >>> tefas = Crawler()
-    >>> data = tefas.fetch(date="2020-11-20")
-    >>> print(data[0])
-    {
-        'code': 'PPF',
-        'title': 'AZİMUT PORTFÖY AKÇE SERBEST FON',
-        'date': datetime.date(2020, 11, 20),
-        'other': 0.0,
-        'government_bond': 0.0,
-        'eurobonds': 0.0,
-        ...
-    }
+    >>> data = tefas.fetch(start="2020-11-20")
+    >>> data.head(1)
+           price  number_of_shares code  ... precious_metals  stock  private_sector_bond
+    0  41.302235         1898223.0  AAK  ...             0.0  31.14                 3.28
+    >>> data = tefas.fetch(name="YAC",
+    >>>                    start="2020-11-15",
+    >>>                    end="2020-11-20",
+    >>>                    columns=["date", "code", "price"])
+    >>> data.head()
+             date code     price
+    0  2020-11-20  YAC  1.844274
+    1  2020-11-19  YAC  1.838618
+    2  2020-11-18  YAC  1.833198
+    3  2020-11-17  YAC  1.838440
+    4  2020-11-16  YAC  1.827832
     """
 
     root_url = "http://www.fundturkey.com.tr"
@@ -83,36 +56,54 @@ class Crawler:
         _ = self.session.get(self.root_url)
         self.cookies = self.session.cookies.get_dict()
 
-    def fetch(self, date: Union[str, datetime]) -> List[Dict]:
+    def fetch(
+        self,
+        start: Union[str, datetime],
+        end: Optional[Union[str, datetime]] = None,
+        name: Optional[str] = None,
+        columns: Optional[List[str]] = None,
+    ) -> pd.DataFrame:
         """Main entry point of the public API. Get fund information.
 
         Args:
-            date: The date that fund information is crawled for.
+            start: The date that fund information is crawled for.
+            end: End of the period that fund information is crawled for. (optional)
+            name: Name of the fund. If not given, all funds will be returned. (optional)
+            columns: List of columns to be returned. (optional)
 
         Returns:
-            A list of dictionary where each element is the information for a fund.
+            A pandas DataFrame where each row is the information for a fund.
 
         Raises:
             ValueError if date format is wrong.
         """
-        date = _parse_date(date)
+        start_date = _parse_date(start)
+        end_date = _parse_date(end or start)
         data = {
             "fontip": "YAT",
-            "bastarih": date,
-            "bittarih": date,
+            "bastarih": start_date,
+            "bittarih": end_date,
+            "fonkod": name.upper() if name else "",
         }
+
         # General info pane
         info_schema = InfoSchema(many=True)
         info = self._do_post(self.info_endpoint, data)
         info = info_schema.load(info)
+        info = pd.DataFrame(info)
+
         # Portfolio breakdown pane
         detail_schema = BreakdownSchema(many=True)
         detail = self._do_post(self.detail_endpoint, data)
         detail = detail_schema.load(detail)
+        detail = pd.DataFrame(detail)
+
         # Merge two panes
-        merged = _merge_tables(info, detail, "code")
-        # Make sure final data has all required fields
-        merged = [{f: d.setdefault(f) for f in Fields.ALL} for d in merged]
+        merged = pd.merge(info, detail, on=["code", "date"])
+
+        # Return only desired columns
+        merged = merged[columns] if columns else merged
+
         return merged
 
     def _do_post(self, endpoint: str, data: Dict[str, str]) -> Dict[str, str]:
@@ -124,3 +115,23 @@ class Crawler:
             headers=self.headers,
         )
         return response.json().get("data", {})
+
+
+def _parse_date(date: Union[str, datetime]) -> str:
+    if isinstance(date, datetime):
+        formatted = datetime.strftime(date, "%d.%m.%Y")
+    elif isinstance(date, str):
+        try:
+            parsed = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError(
+                "Date string format is incorrect. " "It should be `YYYY-MM-DD`"
+            ) from exc
+        else:
+            formatted = datetime.strftime(parsed, "%d.%m.%Y")
+    else:
+        raise ValueError(
+            "`date` should be a string like 'YYYY-MM-DD' "
+            "or a `datetime.datetime` object."
+        )
+    return formatted

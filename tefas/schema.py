@@ -14,18 +14,29 @@ class InfoSchema(Schema):
     number_of_shares = fields.Float(data_key="TEDPAYSAYISI", allow_none=True)
     number_of_investors = fields.Float(data_key="KISISAYISI", allow_none=True)
 
+    # pylint: disable=no-self-use
+    # pylint: disable=unused-argument
     @pre_load
-    def parse_date(self, input_data, **kwargs):
-        """Convert milliseconds Unix timestamp to date"""
+    def pre_load_hook(self, input_data, **kwargs):
+        # Convert milliseconds Unix timestamp to date
         seconds_timestamp = int(input_data["TARIH"]) / 1000
         input_data["TARIH"] = date.fromtimestamp(seconds_timestamp).isoformat()
         return input_data
+
+    @post_load
+    def post_load_hool(self, output_data, **kwargs):
+        # Fill missing fields with default None
+        output_data = {f: output_data.setdefault(f) for f in self.fields}
+        return output_data
+    # pylint: enable=no-self-use
+    # pylint: enable=unused-argument
 
     class Meta:
         unknown = EXCLUDE
 
 
 class BreakdownSchema(Schema):
+    date = fields.Date(data_key="Tarih", allow_none=True)
     tmm = fields.Float(data_key="TMM (%)", allow_none=True)
     repo = fields.Float(data_key="Repo (%)", allow_none=True)
     code = fields.String(data_key="Fon Kodu", allow_none=True)
@@ -76,21 +87,29 @@ class BreakdownSchema(Schema):
         data_key="Private Sector Lease Certificates (%)", allow_none=True
     )
 
+    # pylint: disable=no-self-use
+    # pylint: disable=unused-argument
+    @pre_load
+    def pre_load_hook(self, input_data, **kwargs):
+        # Convert milliseconds Unix timestamp to date
+        seconds_timestamp = int(input_data["Tarih"]) / 1000
+        input_data["Tarih"] = date.fromtimestamp(seconds_timestamp).isoformat()
+        return input_data
+
     @post_load
-    def parse_date(self, output_data, **kwargs):
-        """Replace None values with 0 for float fields"""
+    def post_load_hook(self, output_data, **kwargs):
+        # Replace None values with 0 for float fields
         output_data = {
-            k: v if isinstance(v, float) and v is not None else 0.0
+            k: v
+            if not (isinstance(self.fields[k], fields.Float) and v is None)
+            else 0.0
             for k, v in output_data.items()
         }
+        # Fill missing fields with default None
+        output_data = {f: output_data.setdefault(f) for f in self.fields}
         return output_data
+    # pylint: enable=no-self-use
+    # pylint: enable=unused-argument
 
     class Meta:
         unknown = EXCLUDE
-
-
-# Helper class for playing with field names
-class Fields:
-    GENERAL_INFO = set(InfoSchema().fields.keys())
-    PORTFOLIO_BREAKDOWN = set(BreakdownSchema().fields.keys())
-    ALL = GENERAL_INFO.union(PORTFOLIO_BREAKDOWN)

@@ -21,34 +21,32 @@ Import the `Crawler` object and create an instance of it.
 ```python
 from tefas import Crawler
 
-crawler = Crawler()
+tefas = Crawler()
 ```
 
 ## API
 
-### `fetch(date="YYYY-MM-DD")`
+### `fetch(start, end, name, columns)`
+
+|Argument|Type|Description|Required|
+|--|--|--|--|
+|**start**|`string` or `datetime.datetime`|The date that fund information is crawled for.|Yes|
+|**end**|`string` or `datetime.datetime`|End of the period that fund information is crawled for.|No|
+|**name**|`string`|Name of the fund. If not given, all funds will be returned.|No|
+|**columns[]**|`list` of `string`|List of columns to be returned.|No|
+
+### Examples
 
 Get all funds for a given day.
 
 ```python
-data = crawler.fetch(date="2020-11-20")
+data = tefas.fetch(start="2020-11-20")
 ```
 
-This should return all fund information for the given day as a list of dictionaries like this:
+Get a specific fund for a time period, and select columns.
 
-```
-[
-    {
-        'code': 'PPF',
-        'title': 'AZİMUT PORTFÖY AKÇE SERBEST FON',
-        'date': datetime.date(2020, 11, 20),
-        'other': 0.0,
-        'government_bond': 0.0,
-        'eurobonds': 0.0,
-        ...
-    },
-    ...
-]
+```python
+data = tefas.fetch(start="2020-11-15", end="2020-11-20", name="YAC", columns=["code", "date", "price"])
 ```
 
 ## Data Schema
@@ -57,7 +55,7 @@ As of today, we support the following data schema from [Tefas](http://www.fundtu
 
 | Column | Description | Type |
 |---|---|---|
-| date | Sate | `datetime.date` |
+| date | Sate | `date` |
 | price | Price of the fund for a given date | `string` |
 | code | Short code of the fund | `string` |
 | title | Full name of the fund | `string` |
@@ -93,13 +91,10 @@ As of today, we support the following data schema from [Tefas](http://www.fundtu
 
 ## To-do
 
-**API**
-
-Below API is planned but not implemented yet.
-
-- `fetch(date="2020-11-20", fund="AAK")` A single fund's inormation for a given day.
-- `fetch(start_date="2020-11-19", end_date="2020-11-20")` All fund information for a given date range.
-- `fetch(start_date="2020-11-19", end_date="2020-11-20", fund="AAK")` A single fund's information for a given date range.
+* Better packaging (setup.cfg & pyproject.toml)
+* Increase test coverage
+* Request error handling
+* Cache query results
 
 ## License
 
