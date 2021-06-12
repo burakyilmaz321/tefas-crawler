@@ -61,3 +61,6 @@ target/
 
 # Notebooks
 *.ipynb
+
+# Pyenv
+.python-version
