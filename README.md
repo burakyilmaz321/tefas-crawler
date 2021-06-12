@@ -91,7 +91,6 @@ As of today, we support the following data schema from [Tefas](http://www.fundtu
 
 ## To-do
 
-* Better packaging (setup.cfg & pyproject.toml)
 * Increase test coverage
 * Request error handling
 * Cache query results
