@@ -28,6 +28,7 @@ class InfoSchema(Schema):
         # Fill missing fields with default None
         output_data = {f: output_data.setdefault(f) for f in self.fields}
         return output_data
+
     # pylint: enable=no-self-use
     # pylint: enable=unused-argument
 
@@ -108,6 +109,7 @@ class BreakdownSchema(Schema):
         # Fill missing fields with default None
         output_data = {f: output_data.setdefault(f) for f in self.fields}
         return output_data
+
     # pylint: enable=no-self-use
     # pylint: enable=unused-argument
 
