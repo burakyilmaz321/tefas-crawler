@@ -12,6 +12,8 @@ clean:
 	# test
 	rm -rf .pytest_cache/
 	rm -rf .tox/
+	rm .coverage
+	rm coverage.xml
 
 build:
 	python setup.py sdist bdist_wheel
