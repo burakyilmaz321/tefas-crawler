@@ -90,13 +90,13 @@ class Crawler:
         info_schema = InfoSchema(many=True)
         info = self._do_post(self.info_endpoint, data)
         info = info_schema.load(info)
-        info = pd.DataFrame(info)
+        info = pd.DataFrame(info, columns=info_schema.fields.keys())
 
         # Portfolio breakdown pane
         detail_schema = BreakdownSchema(many=True)
         detail = self._do_post(self.detail_endpoint, data)
         detail = detail_schema.load(detail)
-        detail = pd.DataFrame(detail)
+        detail = pd.DataFrame(detail, columns=detail_schema.fields.keys())
 
         # Merge two panes
         merged = pd.merge(info, detail, on=["code", "date"])
