@@ -93,3 +93,86 @@ class BreakdownSchema(Schema):
 
     class Meta:
         unknown = EXCLUDE
+
+
+class ComparisonFundReturnSchema(Schema):
+    code = fields.String(data_key="FONKODU", allow_none=True)
+    title = fields.String(data_key="FONUNVAN", allow_none=True)
+
+    fon_type = fields.String(data_key="FONTURACIKLAMA", allow_none=True)
+    return_1a = fields.Float(data_key="GETIRI1A", allow_none=True)
+    return_3a = fields.Float(data_key="GETIRI3A", allow_none=True)
+    return_6a = fields.Float(data_key="GETIRI6A", allow_none=True)
+    return_1y = fields.Float(data_key="GETIRI1Y", allow_none=True)
+    return_yb = fields.Float(data_key="GETIRIYB", allow_none=True)
+    return_3y = fields.Float(data_key="GETIRI3Y", allow_none=True)
+    return_5y = fields.Float(data_key="GETIRI5Y", allow_none=True)
+
+    @post_load
+    def post_load_hool(self, output_data, **kwargs):
+        # Fill missing fields with default None
+        output_data = {f: output_data.setdefault(f) for f in self.fields}
+        return output_data
+
+    # pylint: enable=no-self-use
+    # pylint: enable=unused-argument
+
+    class Meta:
+        unknown = EXCLUDE
+
+
+class ComparisonManagementFeedsSchema(Schema):
+    code = fields.String(data_key="FONKODU", allow_none=True)
+    title = fields.String(data_key="FONUNVAN", allow_none=True)
+
+    founder_code = fields.String(data_key="KURUCUKODU", allow_none=True)
+    fon_type_code = fields.Float(data_key="FONTURKOD", allow_none=True)
+    fund_type_explanation = fields.String(data_key="FONTURACIKLAMA", allow_none=True)
+    sub_title_1 = fields.String(data_key="ALTBASLIK1", allow_none=True)
+    applied_management_fee_annual = fields.String(data_key="UYGULANANYU1Y", allow_none=True)
+    sub_title_2 = fields.String(data_key="ALTBASLIK2", allow_none=True)
+    management_fee_specified_fund_rules_annual = fields.String(data_key="FONICTUZUKYU1G", allow_none=True)
+    annual_net_rate_of_return = fields.Float(data_key="YILLIKGETIRI", allow_none=True)
+    sub_title_3 = fields.String(data_key="ALTBASLIK3", allow_none=True)
+    annual_maximum_fund_total_expense_ratio = fields.String(data_key="FONTOPGIDERKESORAN", allow_none=True)
+
+    @post_load
+    def post_load_hool(self, output_data, **kwargs):
+        # Fill missing fields with default None
+        output_data = {f: output_data.setdefault(f) for f in self.fields}
+        return output_data
+
+    # pylint: enable=no-self-use
+    # pylint: enable=unused-argument
+
+    class Meta:
+        unknown = EXCLUDE
+
+
+class ComparisonFundSizesSchema(Schema):
+    code = fields.String(data_key="FONKODU", allow_none=True)
+    title = fields.String(data_key="FONUNVAN", allow_none=True)
+
+    founder_code = fields.String(data_key="KURUCUKODU", allow_none=True)
+    fund_type = fields.String(data_key="FONTIPI", allow_none=True)
+    fon_type_code = fields.Float(data_key="FONTURKOD", allow_none=True)
+    fund_type_explanation = fields.String(data_key="FONTURACIKLAMA", allow_none=True)
+    first_portfolio_value = fields.Float(data_key="ILKPORTFOYDEGERI", allow_none=True)
+    last_portfolio_value = fields.Float(data_key="SONPORTFOYDEGERI", allow_none=True)
+    portfolio_size_change = fields.Float(data_key="PORTBUYUKLUKDEGISIM", allow_none=True)
+    numb_of_first_shares = fields.Float(data_key="ILKPAYADEDI", allow_none=True)
+    numb_of_last_shares = fields.Float(data_key="SONPAYADEDI", allow_none=True)
+    change_payment = fields.Float(data_key="PAYADETDEGISIM", allow_none=True)
+    clear_rate_of_return = fields.Float(data_key="NETGETIRIORANI", allow_none=True)
+
+    @post_load
+    def post_load_hool(self, output_data, **kwargs):
+        # Fill missing fields with default None
+        output_data = {f: output_data.setdefault(f) for f in self.fields}
+        return output_data
+
+    # pylint: enable=no-self-use
+    # pylint: enable=unused-argument
+
+    class Meta:
+        unknown = EXCLUDE

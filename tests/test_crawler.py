@@ -12,3 +12,4 @@ def test_empty_result():
     Crawler._do_post = MagicMock(return_value=[])
     crawler = Crawler()
     crawler.fetch(start="2020-11-20")
+
