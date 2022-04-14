@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Union
 import pandas as pd
 import requests
 
+from tefas.cache.inmemorycache import get_from_cache, set_cache
 from tefas.schemas import InfoSchema, BreakdownSchema, \
     ComparisonManagementFeedsSchema, \
     ComparisonFundSizesSchema, \
@@ -90,6 +91,12 @@ class SecuritiesMutualFundsCrawler:
             "fonkod": name.upper() if name else "",
         }
 
+        # ask from cache
+        key = str(data) + "fetch_historical_data"
+        result = get_from_cache(key)
+        if result != "no data":
+            return result
+
         # General info pane
         info_schema = InfoSchema(many=True)
         info = self._do_post(self.info_endpoint, "/TarihselVeriler.aspx", data)
@@ -107,7 +114,7 @@ class SecuritiesMutualFundsCrawler:
 
         # Return only desired columns
         merged = merged[columns] if columns else merged
-
+        set_cache(key, merged)
         return merged
 
     def fetch_comparison_return_data(self,
@@ -139,13 +146,23 @@ class SecuritiesMutualFundsCrawler:
             "bastarih": start_date,
             "bittarih": end_date, }
 
+        # ask from cache
+        key = str(data) + "fetch_comparison_return_data"
+        result = get_from_cache(key)
+        if result != "no data":
+            return result
+
         # comparison fund return pane
         comparison_return_schema = ComparisonFundReturnSchema(many=True)
-        comparison_return = self._do_post(self.comparison_fund_returns_endpoint, "", data)
+        comparison_return = self._do_post(
+            self.comparison_fund_returns_endpoint, "", data)
         comparison_return = comparison_return_schema.load(comparison_return)
-        comparison_return = pd.DataFrame(comparison_return, columns=comparison_return_schema.fields.keys())
+        comparison_return = pd.DataFrame(
+            comparison_return, columns=comparison_return_schema.fields.keys())
 
-        return comparison_return[columns] if columns else comparison_return
+        result_data = comparison_return[columns] if columns else comparison_return
+        set_cache(key, result_data)
+        return result_data
 
     def fetch_comparison_management_feeds_data(self,
                                                umbrella_fund_type: Optional[str] = None,
@@ -162,14 +179,23 @@ class SecuritiesMutualFundsCrawler:
             "fonunvantip": fund_title_type,
             "islemdurum": "", }
 
+        # ask from cache
+        key = str(data) + "fetch_comparison_management_feeds_data"
+        result = get_from_cache(key)
+        if result != "no data":
+            return result
+
         # comparison management feeds pane
         comparison_management_feeds_schema = ComparisonManagementFeedsSchema(many=True)
         comparison_management_feeds = self._do_post(self.comparison_management_feeds_endpoint, "",
                                                     data)
-        comparison_management_feeds = comparison_management_feeds_schema.load(comparison_management_feeds)
+        comparison_management_feeds = comparison_management_feeds_schema.load(
+            comparison_management_feeds)
         comparison_management_feeds = pd.DataFrame(comparison_management_feeds,
                                                    columns=comparison_management_feeds_schema.fields.keys())
-        return comparison_management_feeds[columns] if columns else comparison_management_feeds
+        result_data = comparison_management_feeds[columns] if columns else comparison_management_feeds
+        set_cache(key, result_data)
+        return result_data
 
     def fetch_comparison_fund_sizes_data(self,
                                          start: Union[str, datetime],
@@ -194,6 +220,13 @@ class SecuritiesMutualFundsCrawler:
             "fonunvantip": fund_title_type,
             "strperiod": "1,1,1,1,1,1,1",
             "islemdurum": "", }
+
+        # ask from cache
+        key = str(data) + "fetch_comparison_fund_sizes_data"
+        result = get_from_cache(key)
+        if result != "no data":
+            return result
+
         # comparison fund sizes pane
         comparison_fund_sizes_schema = ComparisonFundSizesSchema(many=True)
         comparison_fund_sizes = self._do_post(self.comparison_fund_sizes_endpoint, "",
@@ -201,7 +234,9 @@ class SecuritiesMutualFundsCrawler:
         comparison_fund_sizes = comparison_fund_sizes_schema.load(comparison_fund_sizes)
         comparison_fund_sizes = pd.DataFrame(comparison_fund_sizes,
                                              columns=comparison_fund_sizes_schema.fields.keys())
-        return comparison_fund_sizes[columns] if columns else comparison_fund_sizes
+        result_data = comparison_fund_sizes[columns] if columns else comparison_fund_sizes
+        set_cache(key, result_data)
+        return result_data
 
     def _do_post(self, endpoint: str, referer: str, data: Dict[str, str]) -> Dict[str, str]:
         # TODO: error handling. this is quiet fishy now.
