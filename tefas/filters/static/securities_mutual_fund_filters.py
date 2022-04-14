@@ -1,6 +1,6 @@
 from types import MappingProxyType
 
-turkey_stock_mutual_fund_types_tr = MappingProxyType({
+securities_mutual_fund_umbrella_types_tr = MappingProxyType({
     "Tümü": "Tümü",
     "Borçlanma Araçları Şemsiye Fonu": "100",
     "Değişken Şemsiye Fonu": "101",
@@ -13,7 +13,7 @@ turkey_stock_mutual_fund_types_tr = MappingProxyType({
     "Serbest Şemsiye Fonu": "108",
 })
 
-turkey_stock_mutual_fund_types_en = MappingProxyType({
+securities_mutual_fund_umbrella_types_en = MappingProxyType({
     "All": "All",
     "Debt Securities Umbrella Fund": "100",
     "Fund of Funds Umbrella Fund": "102",
@@ -26,7 +26,7 @@ turkey_stock_mutual_fund_types_en = MappingProxyType({
     "Variable Umbrella Fund": "101",
 })
 
-turkey_stock_mutual_fund__title_type_tr = MappingProxyType({
+securities_mutual_fund_title_type_tr = MappingProxyType({
     "Tümü": "Tümü",
     "Agresif Değişken": "Agresif Değişken",
     "Alternatif": "Alternatif",
@@ -67,8 +67,7 @@ turkey_stock_mutual_fund__title_type_tr = MappingProxyType({
     "Yabancı Fon Sepeti": "Yabancı Fon Sepeti",
 })
 
-
-turkey_stock_mutual_fund__title_type_en = MappingProxyType({
+securities_mutual_fund_title_type_en = MappingProxyType({
     "All": "All",
     "Absolute Return Targeted": "Absolute Return Targeted",
     "Aggressive Variable": "Aggressive Variable",
@@ -107,5 +106,4 @@ turkey_stock_mutual_fund__title_type_en = MappingProxyType({
     "Short-Term Bonds And Bills": "Short-Term Bonds And Bills",
     "Silver": "Silver",
     "Variable": "Variable",
-
 })

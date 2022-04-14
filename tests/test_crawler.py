@@ -1,15 +1,15 @@
 from unittest.mock import MagicMock
 
-from tefas import Crawler
+from tefas import SecuritiesMutualFundsCrawler
 
 
 def test_crawler():
-    crawler = Crawler()
+    crawler = SecuritiesMutualFundsCrawler()
     assert crawler
+
 
 def test_empty_result():
     """Test the client when POST to tefas returns empty list"""
-    Crawler._do_post = MagicMock(return_value=[])
-    crawler = Crawler()
+    SecuritiesMutualFundsCrawler._do_post = MagicMock(return_value=[])
+    crawler = SecuritiesMutualFundsCrawler()
     crawler.fetch(start="2020-11-20")
-

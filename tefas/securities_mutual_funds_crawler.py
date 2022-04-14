@@ -1,4 +1,4 @@
-"""Tefas Crawler
+"""Tefas SecuritiesMutualFundsCrawler
 
 Crawls public invenstment fund information from Turkey Electronic Fund Trading Platform.
 """
@@ -9,18 +9,18 @@ from typing import Dict, List, Optional, Union
 import pandas as pd
 import requests
 
-from tefas.schema import InfoSchema, BreakdownSchema, \
+from tefas.schemas import InfoSchema, BreakdownSchema, \
     ComparisonManagementFeedsSchema, \
     ComparisonFundSizesSchema, \
     ComparisonFundReturnSchema
 
 
-class Crawler:
+class SecuritiesMutualFundsCrawler:
     """Fetch public fund information from ``https://www.tefas.gov.tr or http://www.fundturkey.com.tr``.
 
     Examples:
 
-    >>> tefas = Crawler()
+    >>> tefas = SecuritiesMutualFundsCrawler()
     >>> data = tefas.fetch(start="2020-11-20")
     >>> data.head(1)
            price  number_of_shares code  ... precious_metals  stock  private_sector_bond
@@ -58,7 +58,6 @@ class Crawler:
             start: Union[str, datetime],
             end: Optional[Union[str, datetime]] = None,
             umbrella_fund_type: Optional[str] = None,
-            fund_type: Optional[str] = "YAT",
             fund_title_type: Optional[str] = None,
             name: Optional[str] = None,
             columns: Optional[List[str]] = None,
@@ -84,7 +83,7 @@ class Crawler:
         end_date = _parse_date(end or start)
         data = {
             "sfontur": umbrella_fund_type,
-            "fontip": fund_type,
+            "fontip": "YAT",
             "fonunvantip": fund_title_type,
             "bastarih": start_date,
             "bittarih": end_date,
@@ -93,13 +92,13 @@ class Crawler:
 
         # General info pane
         info_schema = InfoSchema(many=True)
-        info = self._do_post(self.info_endpoint, "/", data)  # TarihselVeriler.aspx
+        info = self._do_post(self.info_endpoint, "/TarihselVeriler.aspx", data)
         info = info_schema.load(info)
         info = pd.DataFrame(info, columns=info_schema.fields.keys())
 
         # Portfolio breakdown pane
         detail_schema = BreakdownSchema(many=True)
-        detail = self._do_post(self.detail_endpoint, "/", data)  # TarihselVeriler.aspx
+        detail = self._do_post(self.detail_endpoint, "/TarihselVeriler.aspx", data)
         detail = detail_schema.load(detail)
         detail = pd.DataFrame(detail, columns=detail_schema.fields.keys())
 
@@ -115,7 +114,6 @@ class Crawler:
                                      start: Union[str, datetime] = "Başlangıç",
                                      end: Optional[Union[str, datetime]] = "Bitiş",
                                      umbrella_fund_type: Optional[str] = None,
-                                     fund_type: Optional[str] = "YAT",
                                      fund_title_type: Optional[str] = None,
                                      columns: Optional[List[str]] = None,
                                      ) -> pd.DataFrame:
@@ -136,7 +134,7 @@ class Crawler:
             "fongrup": "",
             "kurucukod": "",
             "sfontur": umbrella_fund_type,
-            "fontip": fund_type,
+            "fontip": "YAT",
             "fonunvantip": fund_title_type,
             "bastarih": start_date,
             "bittarih": end_date, }
@@ -151,13 +149,12 @@ class Crawler:
 
     def fetch_comparison_management_feeds_data(self,
                                                umbrella_fund_type: Optional[str] = None,
-                                               fund_type: Optional[str] = "YAT",
                                                fund_title_type: Optional[str] = None,
                                                columns: Optional[List[str]] = None,
                                                ) -> pd.DataFrame:
 
         data = {
-            "fontip": fund_type,
+            "fontip": "YAT",
             "sfontur": umbrella_fund_type,
             "kurucukod": "",
             "fongrup": "",
@@ -178,7 +175,6 @@ class Crawler:
                                          start: Union[str, datetime],
                                          end: Optional[Union[str, datetime]],
                                          umbrella_fund_type: Optional[str] = None,
-                                         fund_type: Optional[str] = "YAT",
                                          fund_title_type: Optional[str] = None,
                                          columns: Optional[List[str]] = None,
                                          ) -> pd.DataFrame:
@@ -188,7 +184,7 @@ class Crawler:
 
         data = {
             "calismatipi": "2",
-            "fontip": fund_type,
+            "fontip": "YAT",
             "sfontur": umbrella_fund_type,
             "kurucukod": "",
             "fongrup": "",

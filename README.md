@@ -1,4 +1,4 @@
-# Tefas Crawler
+# Tefas SecuritiesMutualFundsCrawler
 
 [![PyPI version](https://badge.fury.io/py/tefas-crawler.svg)](https://pypi.org/project/tefas-crawler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,7 +6,8 @@
 [![Package Status](https://img.shields.io/pypi/status/tefas-crawler)](https://pypi.org/project/tefas-crawler)
 [![CI Build](https://github.com/burakyilmaz321/tefas-crawler/workflows/Python%20package/badge.svg)](https://github.com/burakyilmaz321/tefas-crawler/actions)
 
-Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](http://www.fundturkey.com.tr) (TEFAS) with ease.
+Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](http://www.fundturkey.com.tr) (
+TEFAS) with ease.
 
 # Installation
 
@@ -16,12 +17,12 @@ pip install tefas-crawler
 
 # Usage
 
-Import the `Crawler` object and create an instance of it.
+Import the `SecuritiesMutualFundsCrawler` object and create an instance of it.
 
 ```python
-from tefas import Crawler
+from tefas import SecuritiesMutualFundsCrawler
 
-tefas = Crawler()
+tefas = SecuritiesMutualFundsCrawler()
 ```
 
 ## API
