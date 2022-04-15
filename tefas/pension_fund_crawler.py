@@ -8,9 +8,9 @@ from typing import Dict, List, Optional, Union
 
 import pandas as pd
 import requests
-
 from tefas.cache.inmemorycache import get_from_cache, set_cache
 from tefas.response import ResponseModel
+
 from tefas.schemas import InfoSchema, BreakdownSchema, \
     ComparisonManagementFeedsSchema, \
     ComparisonFundSizesSchema, \
@@ -83,23 +83,20 @@ class PensionFundsCrawler:
         # ask from cache
         key = str(data) + "fetch_historical_data"
         result = get_from_cache(key)
-        if result != "no data":
+        if len(result.index) > 0:
             return result
 
         # General info pane
         info_schema = InfoSchema(many=True)
-        res = self._do_post(self.info_endpoint, "/TarihselVeriler.aspx", data)
-        if not res.success:
-            return pd.DataFrame()
-        info = info_schema.load(res.body)
+        info = self._do_post(self.info_endpoint, "/TarihselVeriler.aspx", data)
+        info = info_schema.load(info)
         info = pd.DataFrame(info, columns=info_schema.fields.keys())
 
         # Portfolio breakdown pane
         detail_schema = BreakdownSchema(many=True)
-        res = self._do_post(self.detail_endpoint, "/TarihselVeriler.aspx", data)
-        if not res.success:
-            return pd.DataFrame()
-        detail = detail_schema.load(res.body)
+        detail = self._do_post(self.detail_endpoint,
+                               "/TarihselVeriler.aspx", data)
+        detail = detail_schema.load(detail)
         detail = pd.DataFrame(detail, columns=detail_schema.fields.keys())
 
         # Merge two panes
@@ -112,7 +109,8 @@ class PensionFundsCrawler:
 
     def fetch_comparison_return_data(self,
                                      start: Union[str, datetime] = "Başlangıç",
-                                     end: Optional[Union[str, datetime]] = "Bitiş",
+                                     end: Optional[Union[str,
+                                                         datetime]] = "Bitiş",
                                      fund_group: Optional[str] = None,
                                      fund_type_code: Optional[str] = None,
                                      fund_title_type: Optional[str] = None,
@@ -144,16 +142,14 @@ class PensionFundsCrawler:
         # ask from cache
         key = str(data) + "fetch_comparison_return_data"
         result = get_from_cache(key)
-        if result != "no data":
+        if len(result.index) > 0:
             return result
 
         # comparison fund return pane
         comparison_return_schema = ComparisonFundReturnSchema(many=True)
-        res = self._do_post(
+        comparison_return = self._do_post(
             self.comparison_fund_returns_endpoint, "", data)
-        if not res.success:
-            return pd.DataFrame()
-        comparison_return = comparison_return_schema.load(res.body)
+        comparison_return = comparison_return_schema.load(comparison_return)
         comparison_return = pd.DataFrame(
             comparison_return, columns=comparison_return_schema.fields.keys())
 
@@ -165,7 +161,8 @@ class PensionFundsCrawler:
                                                fund_title_type: Optional[str] = None,
                                                fund_group: Optional[str] = None,
                                                fund_type_code: Optional[str] = None,
-                                               columns: Optional[List[str]] = None,
+                                               columns: Optional[List[str]
+                                                                 ] = None,
                                                ) -> pd.DataFrame:
 
         data = {
@@ -180,17 +177,16 @@ class PensionFundsCrawler:
         # ask from cache
         key = str(data) + "fetch_comparison_management_feeds_data"
         result = get_from_cache(key)
-        if result != "no data":
+        if len(result.index) > 0:
             return result
 
         # comparison management feeds pane
-        comparison_management_feeds_schema = ComparisonManagementFeedsSchema(many=True)
-        res = self._do_post(self.comparison_management_feeds_endpoint, "",
-                            data)
-        if not res.success:
-            return pd.DataFrame()
+        comparison_management_feeds_schema = ComparisonManagementFeedsSchema(
+            many=True)
+        comparison_management_feeds = self._do_post(self.comparison_management_feeds_endpoint, "",
+                                                    data)
         comparison_management_feeds = comparison_management_feeds_schema.load(
-            res.body)
+            comparison_management_feeds)
         comparison_management_feeds = pd.DataFrame(comparison_management_feeds,
                                                    columns=comparison_management_feeds_schema.fields.keys())
         result_data = comparison_management_feeds[columns] if columns else comparison_management_feeds
@@ -225,16 +221,15 @@ class PensionFundsCrawler:
         # ask from cache
         key = str(data) + "fetch_comparison_fund_sizes_data"
         result = get_from_cache(key)
-        if result != "no data":
+        if len(result.index) > 0:
             return result
 
         # comparison fund sizes pane
         comparison_fund_sizes_schema = ComparisonFundSizesSchema(many=True)
-        res = self._do_post(self.comparison_fund_sizes_endpoint, "",
-                            data)
-        if not res.success:
-            return pd.DataFrame()
-        comparison_fund_sizes = comparison_fund_sizes_schema.load(res.body)
+        comparison_fund_sizes = self._do_post(self.comparison_fund_sizes_endpoint, "",
+                                              data)
+        comparison_fund_sizes = comparison_fund_sizes_schema.load(
+            comparison_fund_sizes)
         comparison_fund_sizes = pd.DataFrame(comparison_fund_sizes,
                                              columns=comparison_fund_sizes_schema.fields.keys())
         result_data = comparison_fund_sizes[columns] if columns else comparison_fund_sizes
