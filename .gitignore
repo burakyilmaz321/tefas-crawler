@@ -64,3 +64,6 @@ target/
 
 # Pyenv
 .python-version
+
+# Virtual environments
+.venv
