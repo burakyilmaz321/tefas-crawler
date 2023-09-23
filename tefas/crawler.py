@@ -35,7 +35,7 @@ class Crawler:
     4  2020-11-16  YAC  1.827832
     """
 
-    root_url = "http://www.fundturkey.com.tr"
+    root_url = "https://fundturkey.com.tr"
     detail_endpoint = "/api/DB/BindHistoryAllocation"
     info_endpoint = "/api/DB/BindHistoryInfo"
     headers = {
@@ -47,8 +47,8 @@ class Crawler:
         ),
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Origin": "http://www.fundturkey.com.tr",
-        "Referer": "http://www.fundturkey.com.tr/TarihselVeriler.aspx",
+        "Origin": "https://fundturkey.com.tr",
+        "Referer": "https://fundturkey.com.tr/TarihselVeriler.aspx",
     }
 
     def __init__(self):
