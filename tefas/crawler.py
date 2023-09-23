@@ -3,13 +3,16 @@
 Crawls public invenstment fund information from Turkey Electronic Fund Trading Platform.
 """
 
+import ssl
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-import requests
 import pandas as pd
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.poolmanager import PoolManager
 
-from tefas.schema import InfoSchema, BreakdownSchema
+from tefas.schema import BreakdownSchema, InfoSchema
 
 
 class Crawler:
@@ -52,7 +55,7 @@ class Crawler:
     }
 
     def __init__(self):
-        self.session = requests.Session()
+        self.session = _get_session()
         _ = self.session.get(self.root_url)
         self.cookies = self.session.cookies.get_dict()
 
@@ -135,3 +138,41 @@ def _parse_date(date: Union[str, datetime]) -> str:
             "or a `datetime.datetime` object."
         )
     return formatted
+
+
+def _get_session() -> requests.Session:
+    """
+    Create and return a custom requests session with a modified SSL context.
+
+    This function configures a custom SSL context to use the `OP_LEGACY_SERVER_CONNECT`
+    option, which allows for legacy server connections, addressing specific issues
+    with OpenSSL 3.0.0.
+
+    The custom session uses a custom HTTP adapter that incorporates this modified
+    SSL context for the session's connections.
+
+    This approach is based on solutions found at:
+    - https://stackoverflow.com/questions/71603314/ssl-error-unsafe-legacy-renegotiation-disabled/
+    - https://github.com/urllib3/urllib3/issues/2653
+    """
+
+    class CustomHttpAdapter(HTTPAdapter):
+        def __init__(self, ssl_context=None, **kwargs):
+            self.ssl_context = ssl_context
+            super().__init__(**kwargs)
+
+        def init_poolmanager(
+            self, connections, maxsize, block=False
+        ):  # pylint: disable=arguments-differ
+            self.poolmanager = PoolManager(
+                num_pools=connections,
+                maxsize=maxsize,
+                block=block,
+                ssl_context=self.ssl_context,
+            )
+
+    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
+    session = requests.session()
+    session.mount("https://", CustomHttpAdapter(ctx))
+    return session
