@@ -63,6 +63,7 @@ class Crawler:
         self,
         start: Union[str, datetime],
         end: Optional[Union[str, datetime]] = None,
+        type: Optional[str] = None,
         name: Optional[str] = None,
         columns: Optional[List[str]] = None,
     ) -> pd.DataFrame:
@@ -83,7 +84,7 @@ class Crawler:
         start_date = _parse_date(start)
         end_date = _parse_date(end or start)
         data = {
-            "fontip": "YAT",
+            "fontip": type or "YAT",
             "bastarih": start_date,
             "bittarih": end_date,
             "fonkod": name.upper() if name else "",
