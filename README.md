@@ -26,7 +26,7 @@ tefas = Crawler()
 
 ## API
 
-### `fetch(start, end, name, columns)`
+### `fetch(start, end, name, columns, kind)`
 
 |Argument|Type|Description|Required|
 |--|--|--|--|
@@ -34,6 +34,7 @@ tefas = Crawler()
 |**end**|`string` or `datetime.datetime`|End of the period that fund information is crawled for.|No|
 |**name**|`string`|Name of the fund. If not given, all funds will be returned.|No|
 |**columns[]**|`list` of `string`|List of columns to be returned.|No|
+|**kind**|`string`|Type of the fund. One of `YAT`, `EMK`, or `BYF`. Defaults to `YAT`.|No|
 
 ### Examples
 

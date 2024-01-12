@@ -65,6 +65,7 @@ class Crawler:
         end: Optional[Union[str, datetime]] = None,
         name: Optional[str] = None,
         columns: Optional[List[str]] = None,
+        kind: Optional[str] = "YAT",
     ) -> pd.DataFrame:
         """Main entry point of the public API. Get fund information.
 
@@ -73,17 +74,26 @@ class Crawler:
             end: End of the period that fund information is crawled for. (optional)
             name: Name of the fund. If not given, all funds will be returned. (optional)
             columns: List of columns to be returned. (optional)
+            kind: Type of the fund. One of `YAT`, `EMK`, or `BYF`. Defaults to `YAT`. (optional)
+                - `YAT`: Securities Mutual Funds
+                - `EMK`: Pension Funds
+                - `BYF`: Exchange Traded Funds
 
         Returns:
             A pandas DataFrame where each row is the information for a fund.
 
         Raises:
             ValueError if date format is wrong.
-        """
+        """  # noqa
+        assert kind in [
+            "YAT",
+            "EMK",
+            "BYF",
+        ], "`kind` should be one of `YAT`, `EMK`, or `BYF`"
         start_date = _parse_date(start)
         end_date = _parse_date(end or start)
         data = {
-            "fontip": "YAT",
+            "fontip": kind,
             "bastarih": start_date,
             "bittarih": end_date,
             "fonkod": name.upper() if name else "",
@@ -128,7 +138,7 @@ def _parse_date(date: Union[str, datetime]) -> str:
             parsed = datetime.strptime(date, "%Y-%m-%d")
         except ValueError as exc:
             raise ValueError(
-                "Date string format is incorrect. " "It should be `YYYY-MM-DD`"
+                "Date string format is incorrect. It should be `YYYY-MM-DD`"
             ) from exc
         else:
             formatted = datetime.strftime(parsed, "%d.%m.%Y")

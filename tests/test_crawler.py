@@ -7,6 +7,7 @@ def test_crawler():
     crawler = Crawler()
     assert crawler
 
+
 def test_empty_result():
     """Test the client when POST to tefas returns empty list"""
     Crawler._do_post = MagicMock(return_value=[])
