@@ -85,7 +85,7 @@ class BreakdownSchema(Schema):
     foreign_exchange_traded_funds = fields.Float(data_key="YBYF", allow_none=True)  # Yabancı Borsa Yatırım Fonları
     foreign_equity = fields.Float(data_key="YHS", allow_none=True)  # Yabancı Hisse Senedi
     foreign_securities = fields.Float(data_key="YMK", allow_none=True)  # Yabancı Menkul Kıymet
-    foreign_exchange_traded_funds_temp = fields.Float(data_key="YYF", allow_none=True) # Yatırım fonları katılma payları
+    foreign_investment_fund_participation_shares = fields.Float(data_key="YYF", allow_none=True) # Yatırım fonları katılma payları
     private_sector_international_lease_certificate = fields.Float(data_key="ÖKSYD", allow_none=True)  # Özel Sektör Yurt Dışı Kira Sertifikaları
     private_sector_foreign_debt_instruments = fields.Float(data_key="ÖSDB", allow_none=True)  # Özel Sektör Dış Borçlanma Araçları
 
