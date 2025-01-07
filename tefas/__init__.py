@@ -2,7 +2,7 @@
 # pylint: disable=import-outside-toplevel
 # pylint: disable=redefined-outer-name
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = ["Crawler", "__version__"]
 
 
