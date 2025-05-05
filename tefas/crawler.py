@@ -112,8 +112,8 @@ class Crawler:
         detail = detail_schema.load(detail)
         detail = pd.DataFrame(detail, columns=detail_schema.fields.keys())
 
-        # Merge two panes
-        merged = pd.merge(info, detail, on=["code", "date"])
+        # Merge two panes        
+        merged = pd.merge(info, detail, on=["code", "date"], how="left")
 
         # Return only desired columns
         merged = merged[columns] if columns else merged
