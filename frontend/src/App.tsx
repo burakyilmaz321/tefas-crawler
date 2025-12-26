@@ -40,6 +40,9 @@ const fundKinds: { label: string; value: FundKind }[] = [
   { label: 'Borsa Yatırım Fonları (BYF)', value: 'BYF' },
 ];
 
+// Chart colors for funds - matches PerformanceChart.tsx
+const fundColors = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea'];
+
 const App = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'export'>('home');
   const [fundKind, setFundKind] = useState<FundKind>('YAT');
@@ -331,8 +334,13 @@ const App = () => {
             </div>
 
             <div className="selected-funds-grid">
-              {selectedFunds.map(fund => (
-                <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
+              {selectedFunds.map((fund, index) => (
+                <FundCard
+                  key={fund.code}
+                  fund={fund}
+                  onRemove={() => handleRemoveFund(fund.code)}
+                  color={fundColors[index % fundColors.length]}
+                />
               ))}
             </div>
 
@@ -409,13 +417,17 @@ const App = () => {
               <div className="card" style={{ marginTop: 16 }}>
                 <h3 className="section-title">Risk & Performance Metrics</h3>
                 <div className="analytics-grid">
-                  {selectedFunds.map(fund => {
+                  {selectedFunds.map((fund, index) => {
                     const sharpe = fund.priceHistory ? calculateSharpeRatio(fund.priceHistory) : null;
                     const volatility = fund.priceHistory ? calculateVolatility(fund.priceHistory) : null;
                     const maxDD = fund.priceHistory ? calculateMaxDrawdown(fund.priceHistory) : null;
 
                     return (
-                      <div key={fund.code} className="analytics-card">
+                      <div
+                        key={fund.code}
+                        className="analytics-card"
+                        style={{ borderLeftColor: fundColors[index % fundColors.length] }}
+                      >
                         <div className="analytics-fund-code">{fund.code}</div>
                         <div className="analytics-metrics">
                           <div className="analytics-metric">
