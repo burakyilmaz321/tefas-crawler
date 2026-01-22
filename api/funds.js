@@ -1,5 +1,8 @@
 const { bootstrapSession, fetchInfo, formatDate, toISO } = require('./_lib/tefas');
 const supabase = require('./_lib/supabase');
+const nonTefasFunds = require('./_lib/nonTefasFunds.json');
+
+const nonTefasSet = new Set(nonTefasFunds.funds.map(code => code.toUpperCase()));
 
 const uniqueByCode = (rows) => {
   const seen = new Set();
@@ -19,12 +22,20 @@ module.exports = async function handler(req, res) {
     const formatted = formatDate(today);
     const cookie = await bootstrapSession();
     const info = await fetchInfo({ start: formatted, end: formatted, kind, cookie });
-    const funds = uniqueByCode(info).map((entry) => ({
-      code: entry.FONKODU?.toUpperCase(),
-      title: entry.FONUNVAN,
-      kind,
-      latestDate: toISO(entry.TARIH),
-    }));
+    const funds = uniqueByCode(info).map((entry) => {
+      const code = entry.FONKODU?.toUpperCase();
+      const fund = {
+        code,
+        title: entry.FONUNVAN,
+        kind,
+        latestDate: toISO(entry.TARIH),
+      };
+      // Add TEFAS availability flag for YAT funds
+      if (kind === 'YAT') {
+        fund.isTefasAvailable = !nonTefasSet.has(code);
+      }
+      return fund;
+    });
 
     if (supabase && funds.length > 0) {
       const toUpsert = funds.map(f => ({

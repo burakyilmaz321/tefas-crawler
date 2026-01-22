@@ -20,6 +20,13 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
     const [isExporting, setIsExporting] = useState(false);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [tefasFilter, setTefasFilter] = useState<'all' | 'tefas_only' | 'non_tefas'>('all');
+
+    const tefasFilterOptions = [
+        { label: 'Tümü', value: 'all' as const },
+        { label: 'Sadece TEFAS\'ta İşlem Görenler', value: 'tefas_only' as const },
+        { label: 'Sadece TEFAS Dışı', value: 'non_tefas' as const },
+    ];
 
     const fundKinds = [
         { label: 'Yatırım Fonları (YAT)', value: 'YAT' as FundKind },
@@ -37,6 +44,10 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
 
     useEffect(() => {
         loadFunds();
+        // Reset TEFAS filter when fund type changes (only applicable to YAT)
+        if (fundKind !== 'YAT') {
+            setTefasFilter('all');
+        }
     }, [fundKind]);
 
     const loadFunds = async () => {
@@ -49,11 +60,31 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
         }
     };
 
+    // Filter funds based on TEFAS availability (only for YAT)
+    const getFilteredFunds = () => {
+        if (fundKind !== 'YAT' || tefasFilter === 'all') {
+            return allFunds;
+        }
+        return allFunds.filter(fund => {
+            if (tefasFilter === 'tefas_only') {
+                return fund.isTefasAvailable === true;
+            }
+            return fund.isTefasAvailable === false;
+        });
+    };
+
+    const filteredFunds = getFilteredFunds();
+
     const toggleSelectAll = () => {
-        if (selectedFunds.length === allFunds.length) {
-            setSelectedFunds([]);
+        const filteredCodes = filteredFunds.map(f => f.code);
+        const allFilteredSelected = filteredCodes.every(code => selectedFunds.includes(code));
+
+        if (allFilteredSelected) {
+            // Deselect all filtered funds
+            setSelectedFunds(prev => prev.filter(code => !filteredCodes.includes(code)));
         } else {
-            setSelectedFunds(allFunds.map(f => f.code));
+            // Select all filtered funds (add to existing selection)
+            setSelectedFunds(prev => [...new Set([...prev, ...filteredCodes])]);
         }
     };
 
@@ -331,6 +362,27 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                 </div>
             </div>
 
+            {/* TEFAS Filter - Only shown for YAT funds */}
+            {fundKind === 'YAT' && (
+                <div className="card" style={{ marginBottom: 16 }}>
+                    <h3 className="section-title">TEFAS İşlem Durumu</h3>
+                    <div className="chip-group">
+                        {tefasFilterOptions.map(option => (
+                            <button
+                                key={option.value}
+                                className={`chip ${tefasFilter === option.value ? 'active' : ''}`}
+                                onClick={() => setTefasFilter(option.value)}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                    <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
+                        Gösterilen: {filteredFunds.length} / {allFunds.length} fon
+                    </p>
+                </div>
+            )}
+
             {/* Fund Selection */}
             <div className="card" style={{ marginBottom: 16 }}>
                 <h3 className="section-title">Fon Seçimi</h3>
@@ -338,14 +390,14 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                     <label className="checkbox-label">
                         <input
                             type="checkbox"
-                            checked={selectedFunds.length === allFunds.length}
+                            checked={filteredFunds.length > 0 && filteredFunds.every(f => selectedFunds.includes(f.code))}
                             onChange={toggleSelectAll}
                         />
-                        <span style={{ marginLeft: 8, fontWeight: 600 }}>Tümünü Seç ({allFunds.length} fon)</span>
+                        <span style={{ marginLeft: 8, fontWeight: 600 }}>Tümünü Seç ({filteredFunds.length} fon)</span>
                     </label>
                 </div>
                 <div className="fund-selection-grid">
-                    {allFunds.map(fund => (
+                    {filteredFunds.map(fund => (
                         <label key={fund.code} className="checkbox-label">
                             <input
                                 type="checkbox"
