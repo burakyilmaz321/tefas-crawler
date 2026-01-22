@@ -21,6 +21,7 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [tefasFilter, setTefasFilter] = useState<'all' | 'tefas_only' | 'non_tefas'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const tefasFilterOptions = [
         { label: 'Tümü', value: 'all' as const },
@@ -60,20 +61,38 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
         }
     };
 
-    // Filter funds based on TEFAS availability (only for YAT)
+    // Filter funds based on TEFAS availability (only for YAT) and search query
     const getFilteredFunds = () => {
-        if (fundKind !== 'YAT' || tefasFilter === 'all') {
-            return allFunds;
+        let funds = allFunds;
+
+        // Apply TEFAS filter (only for YAT)
+        if (fundKind === 'YAT' && tefasFilter !== 'all') {
+            funds = funds.filter(fund => {
+                if (tefasFilter === 'tefas_only') {
+                    return fund.isTefasAvailable === true;
+                }
+                return fund.isTefasAvailable === false;
+            });
         }
-        return allFunds.filter(fund => {
-            if (tefasFilter === 'tefas_only') {
-                return fund.isTefasAvailable === true;
-            }
-            return fund.isTefasAvailable === false;
-        });
+
+        // Apply search filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            funds = funds.filter(fund =>
+                fund.code.toLowerCase().includes(query) ||
+                fund.title.toLowerCase().includes(query)
+            );
+        }
+
+        return funds;
     };
 
     const filteredFunds = getFilteredFunds();
+
+    // Count funds after TEFAS filter but before search (for display)
+    const tefasFilteredCount = fundKind === 'YAT' && tefasFilter !== 'all'
+        ? allFunds.filter(fund => tefasFilter === 'tefas_only' ? fund.isTefasAvailable === true : fund.isTefasAvailable === false).length
+        : allFunds.length;
 
     const toggleSelectAll = () => {
         const filteredCodes = filteredFunds.map(f => f.code);
@@ -387,6 +406,16 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
             <div className="card" style={{ marginBottom: 16 }}>
                 <h3 className="section-title">Fon Seçimi</h3>
                 <div style={{ marginBottom: 12 }}>
+                    <input
+                        type="text"
+                        className="input"
+                        placeholder="Fon kodu veya ismi ile ara..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{ marginBottom: 12, width: '100%', maxWidth: 400 }}
+                    />
+                </div>
+                <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
                     <label className="checkbox-label">
                         <input
                             type="checkbox"
@@ -395,6 +424,11 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                         />
                         <span style={{ marginLeft: 8, fontWeight: 600 }}>Tümünü Seç ({filteredFunds.length} fon)</span>
                     </label>
+                    {searchQuery && (
+                        <span style={{ fontSize: 12, color: '#6b7280' }}>
+                            Arama sonucu: {filteredFunds.length} fon
+                        </span>
+                    )}
                 </div>
                 <div className="fund-selection-grid">
                     {filteredFunds.map(fund => (
