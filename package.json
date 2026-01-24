@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "dotenv": "^17.2.3",
