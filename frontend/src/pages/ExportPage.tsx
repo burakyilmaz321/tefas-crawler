@@ -16,7 +16,7 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
     const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
     const [fromDate, setFromDate] = useState('01/01/2024');
     const [toDate, setToDate] = useState(new Date().toLocaleDateString('en-GB'));
-    const [selectedColumns, setSelectedColumns] = useState<string[]>(['fund_type', 'price', 'investor_count', 'market_cap']);
+    const [selectedColumns, setSelectedColumns] = useState<string[]>(['fund_type', 'date', 'price', 'investor_count', 'market_cap']);
     const [format, setFormat] = useState<'csv' | 'excel' | 'pdf'>('csv');
     const [isExporting, setIsExporting] = useState(false);
     const [progress, setProgress] = useState(0);
