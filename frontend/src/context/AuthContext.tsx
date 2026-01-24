@@ -35,15 +35,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const signInWithGithub = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const redirectHost = window.location.origin;
+        const isLocal = redirectHost.includes('localhost');
+
+        // Vercel previews use random hostnames; add a deterministic return path we can allowlist.
+        const redirectTo = isLocal
+            ? `${redirectHost}/`
+            : `${redirectHost}/auth/callback`;
+
+        const { error, data } = await supabase.auth.signInWithOAuth({
             provider: 'github',
             options: {
-                redirectTo: `${window.location.origin}/`
+                redirectTo,
+                // Force PKCE + redirect flow (popup can be blocked on some browsers)
+                queryParams: { prompt: 'consent' }
             }
         });
+
         if (error) {
-            console.error('GitHub login error:', error);
+            console.error('GitHub login error:', error, 'redirectTo:', redirectTo);
             alert('GitHub ile giriş yapılamadı. Lütfen tekrar deneyin.');
+        } else {
+            console.info('GitHub OAuth started', data?.url, 'redirectTo:', redirectTo);
         }
     };
 
