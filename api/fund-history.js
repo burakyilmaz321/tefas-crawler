@@ -145,6 +145,7 @@ module.exports = async function handler(req, res) {
         }, { onConflict: 'code' });
 
         if (fundError) console.error('[Supabase] Failed to sync fund metadata:', fundError);
+
         const toUpsert = info.map(item => ({
           fund_code: code,
           date: new Date(Number(item.TARIH)).toISOString().split('T')[0],
@@ -152,15 +153,6 @@ module.exports = async function handler(req, res) {
           market_cap: Number(item.PORTFOYBUYUKLUK) || 0,
           investor_count: Number(item.KISISAYISI) || 0
         }));
-
-        // Ensure fund exists in funds table first
-        const latest = info[info.length - 1];
-        await supabase.from('funds').upsert({
-          code,
-          title: latest.FONUNVAN,
-          kind,
-          latest_date: new Date(Number(latest.TARIH)).toISOString().split('T')[0]
-        });
 
         const { error: upsertError } = await supabase.from('historical_data').upsert(toUpsert, { onConflict: 'fund_code,date' });
         if (upsertError) console.error('[Supabase] Failed to sync history:', upsertError);

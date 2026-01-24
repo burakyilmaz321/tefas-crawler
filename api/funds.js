@@ -15,10 +15,14 @@ const uniqueByCode = (rows) => {
 module.exports = async function handler(req, res) {
   try {
     const kind = (req.query.kind || 'YAT').toString().toUpperCase();
+    // Use a date 2 days ago to ensure TEFAS has data (system date may be incorrect)
     const today = new Date();
-    const formatted = formatDate(today);
+    const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const formatted = formatDate(twoDaysAgo);
+    console.log(`[funds] Fetching funds for ${kind} on date: ${formatted}`);
     const cookie = await bootstrapSession();
     const info = await fetchInfo({ start: formatted, end: formatted, kind, cookie });
+    console.log(`[funds] Received ${info.length} fund records from TEFAS`);
     const funds = uniqueByCode(info).map((entry) => ({
       code: entry.FONKODU?.toUpperCase(),
       title: entry.FONUNVAN,
