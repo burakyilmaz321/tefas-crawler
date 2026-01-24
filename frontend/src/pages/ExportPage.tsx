@@ -137,6 +137,7 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
         try {
             const days = calculateDays();
             const fundsData = [];
+            const failedFunds: string[] = [];
 
             for (let i = 0; i < selectedFunds.length; i++) {
                 const code = selectedFunds[i];
@@ -145,12 +146,23 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
 
                 setProgress(((i + 1) / selectedFunds.length) * 100);
 
-                const fundDetails = await fetchFundDetails(code, fundKind, days);
-                fundsData.push({
-                    code,
-                    title: fundDetails.title || fundSummary.title,
-                    details: fundDetails
-                });
+                try {
+                    const fundDetails = await fetchFundDetails(code, fundKind, days);
+                    fundsData.push({
+                        code,
+                        title: fundDetails.title || fundSummary.title,
+                        details: fundDetails
+                    });
+                } catch (err) {
+                    console.error(`Failed to fetch ${code}:`, err);
+                    failedFunds.push(code);
+                    // Continue with remaining funds
+                }
+            }
+
+            if (fundsData.length === 0) {
+                setError('Hiçbir fon verisi alınamadı. Lütfen daha sonra tekrar deneyin.');
+                return;
             }
 
             // Generate export based on format
@@ -163,6 +175,10 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
             }
 
             setProgress(100);
+
+            if (failedFunds.length > 0) {
+                setError(`Dışa aktarma tamamlandı, ancak ${failedFunds.length} fon yüklenemedi: ${failedFunds.slice(0, 5).join(', ')}${failedFunds.length > 5 ? '...' : ''}`);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Export failed');
         } finally {

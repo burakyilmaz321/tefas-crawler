@@ -72,6 +72,9 @@ frontend/vite.config.js
 # Notebooks
 *.ipynb
 
+# macOS
+.DS_Store
+
 # Pyenv
 .python-version
 
