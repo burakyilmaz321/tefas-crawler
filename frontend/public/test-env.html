@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        .card {
+            background: #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        pre {
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Environment Variables Test</h1>
+
+    <div class="card">
+        <h2>Vite Environment Variables</h2>
+        <div id="env-check"></div>
+    </div>
+
+    <div class="card">
+        <h2>Browser Storage Check</h2>
+        <div id="storage-check"></div>
+    </div>
+
+    <script type="module">
+        // This will only work in dev mode with Vite
+        const envCheck = document.getElementById('env-check');
+        const storageCheck = document.getElementById('storage-check');
+
+        // Check Vite env variables
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        let envHtml = '<h3>import.meta.env values:</h3><pre>';
+        envHtml += `VITE_SUPABASE_URL: ${supabaseUrl || '❌ NOT SET'}\n`;
+        envHtml += `VITE_SUPABASE_ANON_KEY: ${supabaseKey ? '✅ SET (length: ' + supabaseKey.length + ')' : '❌ NOT SET'}\n`;
+        envHtml += '</pre>';
+
+        if (supabaseUrl === 'https://hirpfdwsnzqgzdfyxriv.supabase.co') {
+            envHtml += '<p class="success">✅ Correct Supabase URL is loaded!</p>';
+        } else if (supabaseUrl === 'https://kyvfnaytfvgkfnccteya.supabase.co') {
+            envHtml += '<p class="error">❌ OLD Supabase URL detected! Please restart Vite dev server.</p>';
+        } else {
+            envHtml += '<p class="warning">⚠️ Unknown or missing Supabase URL</p>';
+        }
+
+        envCheck.innerHTML = envHtml;
+
+        // Check localStorage for old Supabase data
+        let storageHtml = '<h3>LocalStorage Supabase Keys:</h3><pre>';
+        let hasOldUrl = false;
+        let hasNewUrl = false;
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.includes('supabase') || key.startsWith('sb-')) {
+                const value = localStorage.getItem(key);
+                storageHtml += `${key}: ${value.substring(0, 100)}...\n`;
+
+                if (value.includes('kyvfnaytfvgkfnccteya')) {
+                    hasOldUrl = true;
+                }
+                if (value.includes('hirpfdwsnzqgzdfyxriv')) {
+                    hasNewUrl = true;
+                }
+            }
+        }
+        storageHtml += '</pre>';
+
+        if (hasOldUrl) {
+            storageHtml += '<p class="error">❌ OLD Supabase URL found in localStorage!</p>';
+            storageHtml += '<p>Go to <a href="/clear-cache.html" style="color: #60a5fa;">/clear-cache.html</a> to clear it.</p>';
+        } else if (hasNewUrl) {
+            storageHtml += '<p class="success">✅ New Supabase URL found in localStorage</p>';
+        } else {
+            storageHtml += '<p class="warning">⚠️ No Supabase data in localStorage (clean state)</p>';
+        }
+
+        storageCheck.innerHTML = storageHtml;
+    </script>
+</body>
+</html>
