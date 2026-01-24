@@ -1,5 +1,8 @@
 const { bootstrapSession, fetchInfo, formatDate, toISO } = require('./_lib/tefas');
 const supabase = require('./_lib/supabase');
+const nonTefasFunds = require('./_lib/nonTefasFunds.json');
+
+const nonTefasSet = new Set(nonTefasFunds.funds.map(code => code.toUpperCase()));
 
 const uniqueByCode = (rows) => {
   const seen = new Set();
@@ -15,10 +18,14 @@ const uniqueByCode = (rows) => {
 module.exports = async function handler(req, res) {
   try {
     const kind = (req.query.kind || 'YAT').toString().toUpperCase();
+    // Use a date 2 days ago to ensure TEFAS has data (system date may be incorrect)
     const today = new Date();
-    const formatted = formatDate(today);
+    const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const formatted = formatDate(twoDaysAgo);
+    console.log(`[funds] Fetching funds for ${kind} on date: ${formatted}`);
     const cookie = await bootstrapSession();
     const info = await fetchInfo({ start: formatted, end: formatted, kind, cookie });
+    console.log(`[funds] Received ${info.length} fund records from TEFAS`);
     const funds = uniqueByCode(info).map((entry) => ({
       code: entry.FONKODU?.toUpperCase(),
       title: entry.FONUNVAN,

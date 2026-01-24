@@ -3,10 +3,11 @@ import FundSelector from './components/FundSelector';
 import FundCard from './components/FundCard';
 import PerformanceChart from './components/PerformanceChart';
 import ExportPage from './pages/ExportPage';
+import { ChartSkeleton, FundCardSkeleton } from './components/LoadingSkeleton';
 import { fetchFundDetails, fetchFunds } from './api';
 import { FundKind, FundOverview, FundSummary, HistoricalPoint } from './types';
 import { useAuth } from './context/AuthContext';
-import { supabase } from './lib/supabase';
+import { isSupabaseConfigured, supabase } from './lib/supabase';
 import {
   calculateSharpeRatio,
   calculateVolatility,
@@ -40,6 +41,9 @@ const fundKinds: { label: string; value: FundKind }[] = [
   { label: 'Borsa Yatırım Fonları (BYF)', value: 'BYF' },
 ];
 
+// Chart colors for funds - matches PerformanceChart.tsx
+const fundColors = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea'];
+
 const App = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'export'>('home');
   const [fundKind, setFundKind] = useState<FundKind>('YAT');
@@ -55,17 +59,18 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, signInWithGithub, signOut } = useAuth();
+  const isAuthEnabled = isSupabaseConfigured;
 
   // Save current selection to Supabase
   const savePortfolio = async () => {
-    if (!user || selectedCodes.length === 0) return;
+    if (!isAuthEnabled || !user || selectedCodes.length === 0) return;
     try {
       const { error } = await supabase.from('portfolios').upsert({
         user_id: user.id,
         name: 'My Portfolio',
         fund_list: selectedCodes,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      }, { onConflict: 'user_id,name' });
       if (error) throw error;
       alert('Portföy kaydedildi!');
     } catch (err) {
@@ -76,7 +81,7 @@ const App = () => {
 
   // Load portfolio from Supabase on login
   useEffect(() => {
-    if (!user) return;
+    if (!isAuthEnabled || !user) return;
     const loadPortfolio = async () => {
       const { data } = await supabase
         .from('portfolios')
@@ -88,7 +93,7 @@ const App = () => {
       }
     };
     loadPortfolio();
-  }, [user]);
+  }, [isAuthEnabled, user]);
 
   // Fetch fund list on mount or when kind changes
   useEffect(() => {
@@ -267,7 +272,12 @@ const App = () => {
               <button className="chip" onClick={signOut}>Çıkış</button>
             </>
           ) : (
-            <button className="github-login-btn" onClick={signInWithGithub}>
+            <button
+              className="github-login-btn"
+              onClick={signInWithGithub}
+              disabled={!isAuthEnabled}
+              title={!isAuthEnabled ? 'Supabase ortam değişkenleri eksik.' : 'GitHub ile giriş'}
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
               </svg>
@@ -331,9 +341,20 @@ const App = () => {
             </div>
 
             <div className="selected-funds-grid">
-              {selectedFunds.map(fund => (
-                <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
-              ))}
+              {loadingDetails && selectedCodes.length > selectedFunds.length ? (
+                <>
+                  {selectedFunds.map(fund => (
+                    <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
+                  ))}
+                  {Array.from({ length: selectedCodes.length - selectedFunds.length }).map((_, i) => (
+                    <FundCardSkeleton key={`skeleton-${i}`} />
+                  ))}
+                </>
+              ) : (
+                selectedFunds.map(fund => (
+                  <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
+                ))
+              )}
             </div>
 
             <div className="card">
@@ -397,25 +418,33 @@ const App = () => {
 
           {selectedFunds.length > 0 ? (
             <>
-              <PerformanceChart
-                data={chartData}
-                metricLabel={activeMetric.label}
-                selectedCodes={selectedCodes.map(s => s.code)}
-                isNormalized={isNormalized}
-                showMA={showMA}
-              />
+              {loadingDetails ? (
+                <ChartSkeleton />
+              ) : (
+                <PerformanceChart
+                  data={chartData}
+                  metricLabel={activeMetric.label}
+                  selectedCodes={selectedCodes.map(s => s.code)}
+                  isNormalized={isNormalized}
+                  showMA={showMA}
+                />
+              )}
 
               {/* Analytics Panel */}
               <div className="card" style={{ marginTop: 16 }}>
                 <h3 className="section-title">Risk & Performance Metrics</h3>
                 <div className="analytics-grid">
-                  {selectedFunds.map(fund => {
+                  {selectedFunds.map((fund, index) => {
                     const sharpe = fund.priceHistory ? calculateSharpeRatio(fund.priceHistory) : null;
                     const volatility = fund.priceHistory ? calculateVolatility(fund.priceHistory) : null;
                     const maxDD = fund.priceHistory ? calculateMaxDrawdown(fund.priceHistory) : null;
 
                     return (
-                      <div key={fund.code} className="analytics-card">
+                      <div
+                        key={fund.code}
+                        className="analytics-card"
+                        style={{ borderLeftColor: fundColors[index % fundColors.length] }}
+                      >
                         <div className="analytics-fund-code">{fund.code}</div>
                         <div className="analytics-metrics">
                           <div className="analytics-metric">

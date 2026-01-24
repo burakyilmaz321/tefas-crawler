@@ -129,6 +129,14 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.github-login-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.85;
+}
+
 .github-login-btn:active {
   transform: translateY(0);
 }
@@ -238,8 +246,7 @@ body {
 .fund-card-code {
   font-weight: 700;
   font-size: 0.95rem;
-  background: #e0ecff;
-  color: #1d4ed8;
+  color: #000000;
   padding: 3px 8px;
   border-radius: 5px;
 }
@@ -256,11 +263,11 @@ body {
 
 .fund-card-price {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.045rem;
   color: #0f172a;
   margin-bottom: 6px;
   font-family: 'Courier New', monospace;
-  background: #fed7aa;
+  background: #e5e7eb;
   padding: 3px 8px;
   border-radius: 5px;
   display: inline-block;
@@ -369,6 +376,7 @@ body {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 12px;
+  border-left: 4px solid #2563eb;
 }
 
 .analytics-fund-code {

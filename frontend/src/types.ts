@@ -5,6 +5,7 @@ export interface FundSummary {
   title: string;
   kind: FundKind;
   latestDate: string;
+  isTefasAvailable?: boolean; // Only applicable to YAT funds
 }
 
 export interface HistoricalPoint {
