@@ -4,9 +4,10 @@ import { calculateSharpeRatio, formatSharpeRatio } from '../utils/analytics';
 interface Props {
   fund: FundOverview;
   onRemove: (code: string) => void;
+  color?: string;
 }
 
-const FundCard = ({ fund, onRemove }: Props) => {
+const FundCard = ({ fund, onRemove, color }: Props) => {
   // Get latest price from priceHistory
   const latestPrice = fund.priceHistory && fund.priceHistory.length > 0
     ? fund.priceHistory[fund.priceHistory.length - 1].value
@@ -26,7 +27,7 @@ const FundCard = ({ fund, onRemove }: Props) => {
   };
 
   return (
-    <div className="card fund-card">
+    <div className="card fund-card" style={color ? { borderLeftColor: color } : undefined}>
       <div className="fund-card-header">
         <div className="fund-card-header-left">
           <span className="fund-card-code">{fund.code}</span>
