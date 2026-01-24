@@ -3,6 +3,7 @@ import FundSelector from './components/FundSelector';
 import FundCard from './components/FundCard';
 import PerformanceChart from './components/PerformanceChart';
 import ExportPage from './pages/ExportPage';
+import { ChartSkeleton, FundCardSkeleton } from './components/LoadingSkeleton';
 import { fetchFundDetails, fetchFunds } from './api';
 import { FundKind, FundOverview, FundSummary, HistoricalPoint } from './types';
 import { useAuth } from './context/AuthContext';
@@ -68,7 +69,7 @@ const App = () => {
         name: 'My Portfolio',
         fund_list: selectedCodes,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      }, { onConflict: 'user_id,name' });
       if (error) throw error;
       alert('Portföy kaydedildi!');
     } catch (err) {
@@ -334,14 +335,20 @@ const App = () => {
             </div>
 
             <div className="selected-funds-grid">
-              {selectedFunds.map((fund, index) => (
-                <FundCard
-                  key={fund.code}
-                  fund={fund}
-                  onRemove={() => handleRemoveFund(fund.code)}
-                  color={fundColors[index % fundColors.length]}
-                />
-              ))}
+              {loadingDetails && selectedCodes.length > selectedFunds.length ? (
+                <>
+                  {selectedFunds.map(fund => (
+                    <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
+                  ))}
+                  {Array.from({ length: selectedCodes.length - selectedFunds.length }).map((_, i) => (
+                    <FundCardSkeleton key={`skeleton-${i}`} />
+                  ))}
+                </>
+              ) : (
+                selectedFunds.map(fund => (
+                  <FundCard key={fund.code} fund={fund} onRemove={() => handleRemoveFund(fund.code)} />
+                ))
+              )}
             </div>
 
             <div className="card">
@@ -405,13 +412,17 @@ const App = () => {
 
           {selectedFunds.length > 0 ? (
             <>
-              <PerformanceChart
-                data={chartData}
-                metricLabel={activeMetric.label}
-                selectedCodes={selectedCodes.map(s => s.code)}
-                isNormalized={isNormalized}
-                showMA={showMA}
-              />
+              {loadingDetails ? (
+                <ChartSkeleton />
+              ) : (
+                <PerformanceChart
+                  data={chartData}
+                  metricLabel={activeMetric.label}
+                  selectedCodes={selectedCodes.map(s => s.code)}
+                  isNormalized={isNormalized}
+                  showMA={showMA}
+                />
+              )}
 
               {/* Analytics Panel */}
               <div className="card" style={{ marginTop: 16 }}>

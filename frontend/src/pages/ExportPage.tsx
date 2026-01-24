@@ -13,6 +13,7 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
     const [fundKind, setFundKind] = useState<FundKind>(initialFundKind);
     const [allFunds, setAllFunds] = useState<FundSummary[]>([]);
     const [selectedFunds, setSelectedFunds] = useState<string[]>([]);
+    const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
     const [fromDate, setFromDate] = useState('01/01/2024');
     const [toDate, setToDate] = useState(new Date().toLocaleDateString('en-GB'));
     const [selectedColumns, setSelectedColumns] = useState<string[]>(['fund_type', 'price', 'investor_count', 'market_cap']);
@@ -28,6 +29,11 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
         { label: 'Sadece TEFAS\'ta İşlem Görenler', value: 'tefas_only' as const },
         { label: 'Sadece TEFAS Dışı', value: 'non_tefas' as const },
     ];
+
+    // Funds that are NOT available on TEFAS
+    const unavailableFunds = new Set([
+        'ABU', 'ALE', 'ANL', 'AVT', 'AZF', 'ECB', 'ECV', 'FI5', 'FYT', 'GAL', 'GTL', 'GYL', 'HKV', 'HLL', 'HPV', 'IBD', 'IBK', 'IGL', 'INH', 'IOP', 'OGF', 'OTF', 'OYL', 'PAI', 'SKT', 'SLF', 'TAO', 'TBP', 'TGT', 'TI1', 'TIV', 'TKK', 'TKM', 'TNI', 'TNK', 'TPE', 'TPO', 'TPR', 'TSI', 'TZC', 'TZL', 'TZV', 'VK6', 'VKT', 'YAR', 'YBP', 'YDK', 'YLB', 'YOA', 'ZAY', 'ZPK', 'BRG', 'YHP', 'GUE', 'GUA', 'GTK', 'FFD', 'IUZ', 'YIV', 'YVD', 'CVF', 'CVE', 'IPA', 'ARF', 'AIG', 'PYF', 'TTN', 'OFB', 'PYH', 'PYL', 'IYP', 'FBN', 'HMT', 'GFL', 'YCL', 'TZP', 'PPD', 'GZB', 'IDP', 'YCS', 'IZV', 'LHM', 'LHP', 'ITJ', 'MAS', 'GJH', 'YPZ', 'MLS', 'DRS', 'THG', 'OUR', 'TNH', 'TNS', 'YJA', 'HPI', 'HPZ', 'YJO', 'KJK', 'CJD', 'CJG', 'HJA', 'GJE', 'MJH', 'CJF', 'OPZ', 'GJO', 'ZJR', 'ZJT', 'GJF', 'ZPJ', 'FJM', 'OJA', 'TJL', 'OJF', 'YJU', 'EJG', 'IJF', 'GJM', 'ZJH', 'IJK', 'GPH', 'GPV', 'SJP', 'IJE', 'PUA', 'BJO', 'DZG', 'OJU', 'RSF', 'GJA', 'GJD', 'TJB', 'GLP', 'GZO', 'TNP', 'NKJ', 'DKD', 'IJS', 'MJK', 'FJC', 'GAU', 'OJY', 'ILJ', 'NJG', 'GNK', 'GAV', 'GAJ', 'GAC', 'HLR', 'HPL', 'ZLG', 'IZE', 'FJN', 'OZF', 'IZZ', 'GMV', 'GMJ', 'GMG', 'OJH', 'ZPN', 'DTV', 'YDZ', 'NRM', 'LFD', 'DTR', 'CJH', 'IOV', 'OVF', 'KSG', 'NIG', 'ZZL', 'UGL', 'UGH', 'DNL', 'IGZ', 'OLC', 'IGM', 'IGF', 'HVL', 'GFB', 'GZU', 'DVZ', 'UAB', 'HGC', 'LZV', 'PTC', 'DOR', 'HFV', 'HVA', 'IJL', 'HDJ', 'ULL', 'GVL', 'YYO', 'OJN', 'HVB', 'DCV', 'ZBN', 'ZBZ', 'KKB', 'GCA', 'IRL', 'OUY', 'GFD', 'YCG', 'ITV', 'KHU', 'IUM', 'DOA', 'GCI', 'IUN', 'FUM', 'GCZ', 'DOD', 'IZL', 'HUI', 'GCD', 'OCT', 'ZCV', 'OZC', 'DOI', 'YTJ', 'ARP', 'IBG', 'AZV', 'DBG', 'IBR', 'DDS', 'OSH', 'FYM', 'ABS', 'APP', 'IPR', 'IAF', 'IPU', 'FYA', 'IIP', 'FYF', 'OYT', 'IPC', 'IPF', 'ISS', 'IPK', 'IPO', 'IPP', 'ACZ', 'AVC', 'IYR', 'IPE', 'IAS', 'ACN', 'AIR', 'AHH', 'AHZ', 'ICG', 'AIH', 'AII', 'AIM', 'AJE', 'AJN', 'ATJ', 'AVZ', 'AZJ', 'CEY', 'DAI', 'DAT', 'DDC', 'DPC', 'DPE', 'DPG', 'DPL', 'DPN', 'DPP', 'DPR', 'DPZ', 'FRA', 'FRZ', 'FUP', 'FVS', 'FYB', 'IIS', 'FYE', 'FYG', 'IMH', 'FYH', 'IMO', 'GAN', 'IMS', 'IMT', 'GME', 'IMY', 'GSE', 'IMZ', 'GSG', 'GSO', 'HDH', 'HDS', 'ISR', 'HPF', 'IAR', 'KOP', 'IBC', 'IBE', 'DDE', 'KSD', 'KSY', 'UPS', 'YMM', 'KTE', 'KTU', 'MPD', 'YPP', 'YRF', 'OSF', 'YRO', 'YSF', 'PLS', 'PUD', 'PUR', 'SBS', 'SPA', 'SPD', 'SPG', 'SRO', 'SRY', 'SSO', 'STS', 'STZ', 'TCS', 'TDP', 'PPF', 'AJL', 'TSP', 'PBB', 'GMP', 'FFO', 'TIP', 'PUT', 'DCP', 'DNO', 'FPR', 'PRF', 'FDO', 'GGD', 'GGA', 'GGP', 'DAZ', 'GDP', 'GKK', 'PAP', 'TZH', 'DOS', 'TTP', 'TTS', 'UZY', 'TCI', 'DPI', 'GGM', 'HPC', 'OYS', 'HVV', 'HYY', 'IUU', 'YZF', 'GGR', 'GGN', 'HAG', 'OPP', 'HMK', 'TRR', 'GFY', 'GKL', 'HII', 'GEI', 'UAP', 'PSS', 'DDP', 'PBS', 'DSC', 'GZD', 'CTM', 'HNN', 'CTG', 'CTF', 'TTV', 'IFY', 'CTP', 'CTV', 'GMZ', 'TMR', 'GGL', 'KFK', 'GGC', 'KPK', 'ZVB', 'PSG', 'HYK', 'KPB', 'BVB', 'CVA', 'CVD', 'DHS', 'DKV', 'DVA', 'DVC', 'DVI', 'DVN', 'DVO', 'DVU', 'DYJ', 'FDZ', 'FVL', 'FYJ', 'FYV', 'FYZ', 'GBP', 'GEC', 'GFA', 'GFE', 'GFK', 'GFN', 'GFO', 'GFT', 'GLV', 'GVB', 'GVC', 'GVD', 'GVZ', 'GYC', 'GYG', 'GYR', 'HBV', 'HGT', 'HMV', 'HPJ', 'HVC', 'HVN', 'HZV', 'IAC', 'IAI', 'IBP', 'ICK', 'ICU', 'IDV', 'IEZ', 'ILM', 'ILR', 'INV', 'INZ', 'IUA', 'IUB', 'IUC', 'KAC', 'KNC', 'KNP', 'KNS', 'KNT', 'KNV', 'KNZ', 'NKK', 'NTB', 'NTC', 'NTO', 'NYH', 'OAB', 'OAV', 'OCM', 'OCN', 'OFH', 'OFO', 'OGV', 'OKF', 'OMC', 'OME', 'OTE', 'OTS', 'OUB', 'OVR', 'OVT', 'PRZ', 'PTG', 'PUZ', 'RCS', 'RPE', 'RPK', 'RPN', 'RPO', 'SFA', 'TBZ', 'TCG', 'TGV', 'TGZ', 'TIT', 'TLT', 'TMV', 'TRN', 'TTZ', 'URG', 'UYH', 'VCD', 'VCG', 'YNL', 'YON', 'YPD', 'YQA', 'YTR', 'YUD', 'YUI', 'YUY', 'YVF', 'YVO', 'YVS', 'ZCB', 'ZCC', 'ZCE', 'ZCF', 'ZCG', 'ZCH', 'ZFH', 'ZFZ', 'ZSA', 'ZSB', 'ZTF', 'ZUD', 'ZUE', 'ZYC', 'ZYD', 'BVY', 'IHN', 'IVS', 'NHV', 'BVC', 'BVT', 'DKS', 'DUT', 'FSE', 'GLM', 'GYN', 'IFG', 'IHE', 'IOL', 'IRA', 'IUS', 'OTZ', 'ROD', 'RZR', 'URC', 'YZL', 'ZCA', 'ABJ', 'BBI', 'DAL', 'DCD', 'DP1', 'FFF', 'HGH', 'IOJ', 'ITD', 'ITL', 'ITR', 'OAC', 'OIS', 'RCL', 'SBI', 'TP1', 'UFH', 'UHL', 'YP2', 'ZP2', 'AC2', 'ZP1', 'HTZ', 'BGI', 'GP1', 'IBJ', 'IV2', 'FHZ', 'AC7', 'AC8', 'DMV', 'DP2', 'CVB', 'THH', 'YP1', 'ZR2', 'ZR3', 'AC3', 'NVP', 'HAE', 'HME', 'HNS', 'ZP7', 'IV6', 'IV7', 'DP3', 'KLM', 'THS', 'AP2', 'HGU', 'NSS', 'SHS', 'BUP', 'IHY', 'KMS', 'TB9', 'IIC', 'NTF', 'PHS', 'AL4', 'IJI', 'ZKK', 'ZDK', 'OMB', 'TKH', 'ILH', 'THO', 'HKP', 'OBR', 'HIS', 'ICN', 'ZP3', 'LRT', 'NKL', 'DLG', 'ONL', 'IDB', 'SSE', 'LGO', 'FDY', 'ONT', 'DMR', 'EES', 'MKL', 'UCN', 'KKT', 'VKI', 'RTI', 'T3B', 'RUH', 'NTS', 'DKA', 'FS3', 'HSP', 'IBM', 'SYL', 'YPT', 'NP1', 'SER', 'RDH', 'FDE', 'FS1', 'YCH', 'KKP', 'YUK', 'IOM', 'KMA', 'HBM', 'GCC', 'ZP4', 'ZP5', 'AL6', 'DP4', 'DP6', 'GPM', 'PCN', 'FP1', 'ITA', 'PYS', 'INR', 'ZNF', 'ZSN', 'KLL', 'DP7', 'FTY', 'FDV', 'IZM', 'AL7', 'KOZ', 'TNF', 'DP8', 'DP5', 'NHT', 'NFK', 'VTF', 'OFK', 'KDK', 'RDS', 'EPO', 'RBE', 'OPU', 'BSE', 'CSD', 'CSH', 'DP9', 'IIA', 'URS', 'RAY', 'RAF', 'UST', 'URV', 'HFA', 'NOV', 'BAO', 'EHS', 'ILC', 'NDI', 'NDL', 'FKH', 'ILE', 'ILI', 'KDS', 'DMZ', 'TOK', 'NKS', 'IFD', 'THP', 'MJE', 'ION', 'LCT', 'BUT', 'RYF', 'USS', 'ILP', 'MSK', 'PAC', 'HPU', 'RPU', 'FNE', 'DK8', 'ORS', 'TLU', 'DNA', 'SMP', 'BGH', 'DFO', 'FKM', 'KMT', 'OFA', 'RKL', 'IOS', 'FMS', 'SVS', 'VFS', 'FHP', 'KKE', 'RDK', 'ROB', 'TFE', 'BVI', 'BDI', 'DRH', 'GDJ', 'GEZ', 'MGE', 'RYA', 'IZY', 'MPI', 'RMA', 'SRA', 'VOF', 'BHH', 'CAF', 'MOD', 'HUS', 'MSO', 'TAZ', 'IUR', 'FTM', 'IVA', 'RTA', 'CBN', 'PBF', 'IZA', 'MAV', 'IOH', 'FS2', 'HOM', 'KYR', 'TMP', 'CVC', 'KRV', 'ORI', 'RSZ', 'LET', 'YLR', 'DSG', 'MSL', 'BHE', 'DSH', 'OBN', 'ODN', 'OUN', 'ZSK', 'YDL', 'SSN', 'YBJ', 'EGP', 'ITZ', 'GNL', 'GSR', 'IRE', 'KRO', 'DZP', 'GPJ', 'AP6', 'BLE', 'MFT', 'BCC', 'CGD', 'KDZ', 'BAC', 'KBJ', 'RHD', 'MSR', 'PNR', 'FS4', 'DHI', 'RTB', 'BLG', 'FKV', 'KDI', 'KFZ', 'OHI', 'BTY', 'JOT', 'RAN', 'SSD', 'AS3', 'ONB', 'TNB', 'FSV', 'KSL', 'KSM', 'YRB', 'RVS', 'TVR', 'ROY', 'TCN', 'DRD', 'NES', 'DKP', 'NMG', 'TCH', 'PBE', 'PBH', 'PCS', 'PHN', 'PKL', 'GKE', 'HDE', 'SBR', 'DOC', 'GKO', 'ROS', 'BIA', 'BTP', 'BVH', 'BRZ', 'KUP', 'LAI', 'POD', 'EKI', 'PAU', 'OPJ', 'DLN', 'HDV', 'TMS', 'FSM', 'MTL', 'PDE', 'NFH', 'GNP', 'GNZ', 'TGN', 'YPU', 'GOF'
+    ]);
 
     const fundKinds = [
         { label: 'Yatırım Fonları (YAT)', value: 'YAT' as FundKind },
@@ -45,17 +51,16 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
 
     useEffect(() => {
         loadFunds();
-        // Reset TEFAS filter when fund type changes (only applicable to YAT)
-        if (fundKind !== 'YAT') {
-            setTefasFilter('all');
-        }
-    }, [fundKind]);
+    }, [fundKind, showOnlyAvailable]);
 
     const loadFunds = async () => {
         try {
             const funds = await fetchFunds(fundKind);
-            setAllFunds(funds);
-            setSelectedFunds(funds.map(f => f.code)); // Select all by default
+            const filteredFunds = showOnlyAvailable
+                ? funds.filter(f => !unavailableFunds.has(f.code))
+                : funds;
+            setAllFunds(filteredFunds);
+            setSelectedFunds(filteredFunds.map(f => f.code)); // Select all by default
         } catch (err) {
             setError('Fonlar yüklenemedi');
         }
@@ -381,26 +386,30 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                 </div>
             </div>
 
-            {/* TEFAS Filter - Only shown for YAT funds */}
-            {fundKind === 'YAT' && (
-                <div className="card" style={{ marginBottom: 16 }}>
-                    <h3 className="section-title">TEFAS İşlem Durumu</h3>
-                    <div className="chip-group">
-                        {tefasFilterOptions.map(option => (
-                            <button
-                                key={option.value}
-                                className={`chip ${tefasFilter === option.value ? 'active' : ''}`}
-                                onClick={() => setTefasFilter(option.value)}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                    <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-                        Gösterilen: {filteredFunds.length} / {allFunds.length} fon
-                    </p>
+            {/* TEFAS Availability Filter */}
+            <div className="card" style={{ marginBottom: 16 }}>
+                <h3 className="section-title">TEFAS Kullanılabilirlik Filtresi</h3>
+                <div className="chip-group">
+                    <button
+                        className={`chip ${showOnlyAvailable ? 'active' : ''}`}
+                        onClick={() => setShowOnlyAvailable(true)}
+                    >
+                        Sadece TEFAS'ta Mevcut Fonlar ({allFunds.length} fon)
+                    </button>
+                    <button
+                        className={`chip ${!showOnlyAvailable ? 'active' : ''}`}
+                        onClick={() => setShowOnlyAvailable(false)}
+                    >
+                        Tüm Fonlar (Kullanılamayan Dahil)
+                    </button>
                 </div>
-            )}
+                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: 8 }}>
+                    {showOnlyAvailable
+                        ? `✅ Yalnızca TEFAS üzerinden veri alınabilen fonlar gösteriliyor`
+                        : `⚠️ Bazı fonlar TEFAS'ta mevcut değil ve veri alınamayabilir`
+                    }
+                </p>
+            </div>
 
             {/* Fund Selection */}
             <div className="card" style={{ marginBottom: 16 }}>
