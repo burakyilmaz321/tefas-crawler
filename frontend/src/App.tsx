@@ -3,6 +3,12 @@ import FundSelector from './components/FundSelector';
 import FundCard from './components/FundCard';
 import PerformanceChart from './components/PerformanceChart';
 import ExportPage from './pages/ExportPage';
+import FundScreenerPage from './pages/FundScreenerPage';
+import PortfolioPage from './pages/PortfolioPage';
+import BenchmarkPage from './pages/BenchmarkPage';
+import MacroPage from './pages/MacroPage';
+import TechnicalScannerPage from './pages/TechnicalScannerPage';
+import EventsPage from './pages/EventsPage';
 import { ChartSkeleton, FundCardSkeleton } from './components/LoadingSkeleton';
 import { fetchFundDetails, fetchFunds } from './api';
 import { FundKind, FundOverview, FundSummary, HistoricalPoint } from './types';
@@ -45,7 +51,7 @@ const fundKinds: { label: string; value: FundKind }[] = [
 const fundColors = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea'];
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState<'home' | 'export'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'screener' | 'portfolio' | 'benchmark' | 'macro' | 'technical' | 'events' | 'export'>('home');
   const [fundKind, setFundKind] = useState<FundKind>('YAT');
   const [isNormalized, setIsNormalized] = useState(false);
   const [showMA, setShowMA] = useState(false);
@@ -297,6 +303,42 @@ const App = () => {
           Anasayfa
         </button>
         <button
+          className={`tab ${activeTab === 'screener' ? 'active' : ''}`}
+          onClick={() => setActiveTab('screener')}
+        >
+          Fon Tarayıcı
+        </button>
+        <button
+          className={`tab ${activeTab === 'portfolio' ? 'active' : ''}`}
+          onClick={() => setActiveTab('portfolio')}
+        >
+          Portföy
+        </button>
+        <button
+          className={`tab ${activeTab === 'benchmark' ? 'active' : ''}`}
+          onClick={() => setActiveTab('benchmark')}
+        >
+          Benchmark
+        </button>
+        <button
+          className={`tab ${activeTab === 'macro' ? 'active' : ''}`}
+          onClick={() => setActiveTab('macro')}
+        >
+          Makro
+        </button>
+        <button
+          className={`tab ${activeTab === 'technical' ? 'active' : ''}`}
+          onClick={() => setActiveTab('technical')}
+        >
+          Teknik Tarama
+        </button>
+        <button
+          className={`tab ${activeTab === 'events' ? 'active' : ''}`}
+          onClick={() => setActiveTab('events')}
+        >
+          Takvim
+        </button>
+        <button
           className={`tab ${activeTab === 'export' ? 'active' : ''}`}
           onClick={() => setActiveTab('export')}
         >
@@ -305,9 +347,15 @@ const App = () => {
       </div>
 
       {/* Conditional Page Rendering */}
-      {activeTab === 'export' ? (
-        <ExportPage fundKind={fundKind} />
-      ) : (
+      {activeTab === 'export' && <ExportPage fundKind={fundKind} />}
+      {activeTab === 'screener' && <FundScreenerPage />}
+      {activeTab === 'portfolio' && <PortfolioPage />}
+      {activeTab === 'benchmark' && <BenchmarkPage />}
+      {activeTab === 'macro' && <MacroPage />}
+      {activeTab === 'technical' && <TechnicalScannerPage />}
+      {activeTab === 'events' && <EventsPage />}
+
+      {activeTab === 'home' && (
         <>
           {error && (
             <div className="card" style={{ background: '#fef2f2', borderColor: '#fecaca', marginBottom: 16 }}>

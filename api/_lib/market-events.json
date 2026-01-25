@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "date": "2025-01-15",
+      "type": "TCMB",
+      "title": "TCMB faiz kararı açıklaması",
+      "impact": "high",
+      "note": "Resmi takvim açıklaması bekleniyor."
+    },
+    {
+      "date": "2025-01-20",
+      "type": "TEFAS",
+      "title": "TEFAS fon raporlama dönemi",
+      "impact": "medium",
+      "note": "Fonların aylık performans güncellemesi."
+    },
+    {
+      "date": "2025-01-28",
+      "type": "BIST",
+      "title": "BIST dönemsel endeks ağırlık güncellemesi",
+      "impact": "medium",
+      "note": "Endeks ağırlıkları ve bileşenler güncellenir."
+    }
+  ]
+}

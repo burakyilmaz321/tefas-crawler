@@ -459,6 +459,30 @@ body {
   font-weight: 500;
 }
 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.table th {
+  font-weight: 600;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
 .fund-selection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
