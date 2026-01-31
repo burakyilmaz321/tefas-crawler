@@ -56,7 +56,7 @@ export const fetchFundDetails = async (
   if (!API_BASE) {
     throw new Error("API base URL is not configured");
   }
-  const url = new URL(`${API_BASE}/api/fund-history`, window.location.origin);
+  const url = new URL(`${API_BASE}/api/fund-history`);
   url.searchParams.append("code", code);
   url.searchParams.append("kind", kind);
   if (days) url.searchParams.append("days", days.toString());
