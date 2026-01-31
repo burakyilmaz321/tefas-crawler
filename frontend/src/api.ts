@@ -11,7 +11,9 @@ import {
   MarketEvent,
 } from './types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const DEFAULT_API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || DEFAULT_API_BASE;
+const REQUEST_TIMEOUT_MS = 30000;
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
@@ -21,21 +23,55 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-export const fetchFunds = async (kind: FundKind = 'YAT'): Promise<FundSummary[]> => {
-  const response = await fetch(`${API_BASE}/api/funds?kind=${kind}`);
-  const payload = await handleResponse<{ funds: FundSummary[] }>(response);
-  return payload.funds;
+const fetchWithTimeout = async <T>(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = REQUEST_TIMEOUT_MS
+): Promise<T> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return await handleResponse<T>(response);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
-export const fetchFundDetails = async (code: string, kind: FundKind = 'YAT', days?: number): Promise<FundOverview> => {
+export const fetchFunds = async (kind: FundKind = 'YAT'): Promise<FundSummary[]> => {
+  if (!API_BASE) {
+    throw new Error('API base URL is not configured');
+  }
+  const response = await fetchWithTimeout<{ funds: FundSummary[] }>(
+    `${API_BASE}/api/funds?kind=${kind}`
+  );
+  return response.funds;
+};
+
+export const fetchFundDetails = async (
+  code: string,
+  kind: FundKind = 'YAT',
+  days?: number
+): Promise<FundOverview> => {
+  if (!API_BASE) {
+    throw new Error('API base URL is not configured');
+  }
   const url = new URL(`${API_BASE}/api/fund-history`, window.location.origin);
   url.searchParams.append('code', code);
   url.searchParams.append('kind', kind);
   if (days) url.searchParams.append('days', days.toString());
 
-  const response = await fetch(url.toString());
-  const payload = await handleResponse<{ fund: FundOverview }>(response);
-  return payload.fund;
+  const response = await fetchWithTimeout<{ fund: FundOverview }>(url.toString());
+  return response.fund;
 };
 
 export const fetchFundRisk = async (code: string, days = 365): Promise<FundRiskResponse> => {
