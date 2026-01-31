@@ -49,9 +49,16 @@ const MacroPage = () => {
 
       {loading && <div className="card">Yükleniyor...</div>}
 
-      {!loading && series && (
+      {!loading && series && series.series.length === 0 && (
+        <div className="card">Kaynak verisi bulunamadı. Lütfen daha sonra tekrar deneyin.</div>
+      )}
+
+      {!loading && series && series.series.length > 0 && (
         <div className="card">
           <div className="section-title">{series.symbol} (Son 12 Ay)</div>
+          {series.source && (
+            <p className="subtitle" style={{ marginTop: 4 }}>Kaynak: {series.source}</p>
+          )}
           <div className="chart-wrapper" style={{ height: 360 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={series.series} margin={{ top: 12, right: 12, left: 12, bottom: 0 }}>

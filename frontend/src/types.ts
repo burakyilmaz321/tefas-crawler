@@ -82,6 +82,7 @@ export interface MacroSeries {
   symbol: string;
   range: { start: string; end: string };
   series: HistoricalPoint[];
+  source?: string;
 }
 
 export interface TechnicalScanResult {

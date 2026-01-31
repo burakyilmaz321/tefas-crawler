@@ -62,10 +62,15 @@ const calculateMaxDrawdown = (points) => {
 const calculateSma = (points, period) => {
   if (!Array.isArray(points) || points.length < period || period <= 0) return [];
   const result = [];
-  for (let i = period - 1; i < points.length; i += 1) {
-    const window = points.slice(i - period + 1, i + 1);
-    const avg = mean(window.map((item) => item.value));
-    result.push({ date: points[i].date, value: avg });
+  let windowSum = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    windowSum += points[i].value;
+    if (i >= period) {
+      windowSum -= points[i - period].value;
+    }
+    if (i >= period - 1) {
+      result.push({ date: points[i].date, value: windowSum / period });
+    }
   }
   return result;
 };

@@ -1,6 +1,9 @@
 const supabase = require('./_lib/supabase');
-const { fetchFundHistory } = require('./_lib/history');
+const { fetchFundHistoryBatch } = require('./_lib/history');
 const { calculateRsi, calculateSma } = require('./_lib/analytics');
+
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const cache = new Map();
 
 const getDateOffset = (days) => {
   const end = new Date();
@@ -32,6 +35,11 @@ module.exports = async function handler(req, res) {
     const longPeriod = Number(req.query.longPeriod) || 50;
     const limit = Math.min(Number(req.query.limit) || 50, 200);
     const { start, end } = getDateOffset(365);
+    const cacheKey = JSON.stringify({ kind, rsiBelow, shortPeriod, longPeriod, limit, start, end });
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+      return res.status(200).json(cached.data);
+    }
 
     const { data: funds, error } = await supabase
       .from('funds')
@@ -43,9 +51,12 @@ module.exports = async function handler(req, res) {
       throw new Error(error.message);
     }
 
+    const codes = (funds || []).map((fund) => fund.code);
+    const historyByCode = await fetchFundHistoryBatch(codes, start, end);
+
     const results = [];
     for (const fund of funds || []) {
-      const history = await fetchFundHistory(fund.code, start, end);
+      const history = historyByCode[fund.code] || [];
       if (history.length < longPeriod + 2) continue;
 
       const rsi = calculateRsi(history, 14);
@@ -66,12 +77,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({
+    const payload = {
       kind,
       range: { start, end },
       count: results.length,
       results,
-    });
+    };
+    cache.set(cacheKey, { at: Date.now(), data: payload });
+    return res.status(200).json(payload);
   } catch (error) {
     console.error('[fund-technical-scan] failed', error);
     return res.status(500).json({ error: 'Failed to scan funds', detail: error.message });

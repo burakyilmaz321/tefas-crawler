@@ -117,8 +117,12 @@ export const fetchTechnicalScan = async (kind: FundKind, rsiBelow = 30) => {
   return payload.results;
 };
 
-export const fetchMarketEvents = async (): Promise<MarketEvent[]> => {
-  const response = await fetchWithTimeout<Response>(`${API_BASE}/api/market-events`);
+export const fetchMarketEvents = async (start?: string, end?: string, type?: string): Promise<MarketEvent[]> => {
+  const url = new URL(`${API_BASE}/api/market-events`);
+  if (start) url.searchParams.append('start', start);
+  if (end) url.searchParams.append('end', end);
+  if (type) url.searchParams.append('type', type);
+  const response = await fetchWithTimeout<Response>(url.toString());
   const payload = await handleResponse<{ events: MarketEvent[] }>(response);
   return payload.events;
 };
