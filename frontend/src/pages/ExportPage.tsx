@@ -4,10 +4,22 @@ import { fetchFunds, fetchFundDetails } from '../api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { formatTry, formatTry6 } from '../utils/format';
 
 interface ExportPageProps {
     fundKind: FundKind;
 }
+
+const numberFormatter = new Intl.NumberFormat('tr-TR');
+const formatTryOrEmpty = (value: number | null | undefined) => (
+    value === null || value === undefined || Number.isNaN(value) ? '' : formatTry(value)
+);
+const formatTry6OrEmpty = (value: number | null | undefined) => (
+    value === null || value === undefined || Number.isNaN(value) ? '' : formatTry6(value)
+);
+const formatCountOrEmpty = (value: number | null | undefined) => (
+    value === null || value === undefined || Number.isNaN(value) ? '' : numberFormatter.format(value)
+);
 
 const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
     const [fundKind, setFundKind] = useState<FundKind>(initialFundKind);
@@ -251,9 +263,18 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                 csv += `${code},"${title}"`;
                 if (selectedColumns.includes('fund_type')) csv += `,${fundKind}`;
                 if (selectedColumns.includes('date')) csv += `,${point.date}`;
-                if (selectedColumns.includes('price')) csv += `,${details.priceHistory.find((p: any) => p.date === point.date)?.value || ''}`;
-                if (selectedColumns.includes('investor_count')) csv += `,${details.investorHistory.find((p: any) => p.date === point.date)?.value || ''}`;
-                if (selectedColumns.includes('market_cap')) csv += `,${details.marketCapHistory.find((p: any) => p.date === point.date)?.value || ''}`;
+                if (selectedColumns.includes('price')) {
+                    const priceValue = formatTry6OrEmpty(details.priceHistory.find((p: any) => p.date === point.date)?.value);
+                    csv += priceValue ? `,"${priceValue}"` : ',';
+                }
+                if (selectedColumns.includes('investor_count')) {
+                    const countValue = formatCountOrEmpty(details.investorHistory.find((p: any) => p.date === point.date)?.value);
+                    csv += countValue ? `,"${countValue}"` : ',';
+                }
+                if (selectedColumns.includes('market_cap')) {
+                    const capValue = formatTryOrEmpty(details.marketCapHistory.find((p: any) => p.date === point.date)?.value);
+                    csv += capValue ? `,"${capValue}"` : ',';
+                }
                 csv += '\n';
             });
         });
@@ -279,9 +300,9 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
 
                 if (selectedColumns.includes('fund_type')) row['Fund Type'] = fundKind;
                 if (selectedColumns.includes('date')) row['Date'] = details.priceHistory?.[i]?.date || details.investorHistory?.[i]?.date || details.marketCapHistory?.[i]?.date || '';
-                if (selectedColumns.includes('price')) row['Price'] = details.priceHistory?.[i]?.value || '';
-                if (selectedColumns.includes('investor_count')) row['Investor Count'] = details.investorHistory?.[i]?.value || '';
-                if (selectedColumns.includes('market_cap')) row['Market Cap'] = details.marketCapHistory?.[i]?.value || '';
+                if (selectedColumns.includes('price')) row['Price'] = formatTry6OrEmpty(details.priceHistory?.[i]?.value);
+                if (selectedColumns.includes('investor_count')) row['Investor Count'] = formatCountOrEmpty(details.investorHistory?.[i]?.value);
+                if (selectedColumns.includes('market_cap')) row['Market Cap'] = formatTryOrEmpty(details.marketCapHistory?.[i]?.value);
 
                 rows.push(row);
             }
@@ -331,9 +352,9 @@ const ExportPage = ({ fundKind: initialFundKind }: ExportPageProps) => {
                 const row = [];
                 if (selectedColumns.includes('fund_type')) row.push(fundKind);
                 if (selectedColumns.includes('date')) row.push(details.priceHistory?.[i]?.date || '');
-                if (selectedColumns.includes('price')) row.push(details.priceHistory?.[i]?.value?.toFixed(6) || '');
-                if (selectedColumns.includes('investor_count')) row.push(details.investorHistory?.[i]?.value?.toString() || '');
-                if (selectedColumns.includes('market_cap')) row.push(details.marketCapHistory?.[i]?.value?.toFixed(2) || '');
+                if (selectedColumns.includes('price')) row.push(formatTry6OrEmpty(details.priceHistory?.[i]?.value));
+                if (selectedColumns.includes('investor_count')) row.push(formatCountOrEmpty(details.investorHistory?.[i]?.value));
+                if (selectedColumns.includes('market_cap')) row.push(formatTryOrEmpty(details.marketCapHistory?.[i]?.value));
                 rows.push(row);
             }
 
