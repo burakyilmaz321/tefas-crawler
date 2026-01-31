@@ -18,13 +18,20 @@ class InfoSchema(Schema):
     # pylint: disable=unused-argument
     @pre_load
     def pre_load_hook(self, input_data, **kwargs):
-        # Convert milliseconds Unix timestamp to date
-        seconds_timestamp = int(input_data["TARIH"]) / 1000
-        input_data["TARIH"] = date.fromtimestamp(seconds_timestamp).isoformat()
+        if "TARIH" not in input_data or input_data["TARIH"] is None:
+            return input_data
+        try:
+            tarih_value = int(input_data["TARIH"])
+            if tarih_value <= 0:
+                return input_data
+            seconds_timestamp = tarih_value / 1000
+            input_data["TARIH"] = date.fromtimestamp(seconds_timestamp).isoformat()
+        except (ValueError, TypeError, OSError):
+            return input_data
         return input_data
 
     @post_load
-    def post_load_hool(self, output_data, **kwargs):
+    def post_load_hook(self, output_data, **kwargs):
         # Fill missing fields with default None
         output_data = {f: output_data.setdefault(f) for f in self.fields}
         return output_data
@@ -93,9 +100,16 @@ class BreakdownSchema(Schema):
     # pylint: disable=unused-argument
     @pre_load
     def pre_load_hook(self, input_data, **kwargs):
-        # Convert milliseconds Unix timestamp to date
-        seconds_timestamp = int(input_data["TARIH"]) / 1000
-        input_data["TARIH"] = date.fromtimestamp(seconds_timestamp).isoformat()
+        if "TARIH" not in input_data or input_data["TARIH"] is None:
+            return input_data
+        try:
+            tarih_value = int(input_data["TARIH"])
+            if tarih_value <= 0:
+                return input_data
+            seconds_timestamp = tarih_value / 1000
+            input_data["TARIH"] = date.fromtimestamp(seconds_timestamp).isoformat()
+        except (ValueError, TypeError, OSError):
+            return input_data
         return input_data
 
     @post_load
