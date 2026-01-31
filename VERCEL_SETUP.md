@@ -63,7 +63,7 @@ In Supabase Dashboard → Authentication → Providers → GitHub:
 
 ### 4. Vercel Configuration
 The `vercel.json` file configures:
-- Build command: `npm run build`
+- Build command: `cd frontend && npm install && npm run build`
 - Output directory: `frontend/dist`
 - API rewrites for serverless functions
 
