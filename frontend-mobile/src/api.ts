@@ -1,7 +1,6 @@
 import type { FundKind, FundOverview, FundSummary } from "./types";
 
-const DEFAULT_API_BASE = "http://localhost:8000";
-const API_BASE = import.meta.env.VITE_API_BASE || DEFAULT_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const REQUEST_TIMEOUT_MS = 30000;
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
@@ -39,9 +38,6 @@ const fetchWithTimeout = async <T>(
 export const fetchFunds = async (
   kind: FundKind = "YAT"
 ): Promise<FundSummary[]> => {
-  if (!API_BASE) {
-    throw new Error("API base URL is not configured");
-  }
   const response = await fetchWithTimeout<{ funds: FundSummary[] }>(
     `${API_BASE}/api/funds?kind=${kind}`
   );
@@ -53,9 +49,6 @@ export const fetchFundDetails = async (
   kind: FundKind = "YAT",
   days?: number
 ): Promise<FundOverview> => {
-  if (!API_BASE) {
-    throw new Error("API base URL is not configured");
-  }
   const url = new URL(`${API_BASE}/api/fund-history`);
   url.searchParams.append("code", code);
   url.searchParams.append("kind", kind);

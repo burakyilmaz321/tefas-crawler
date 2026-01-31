@@ -11,8 +11,7 @@ import {
   MarketEvent,
 } from './types';
 
-const DEFAULT_API_BASE = 'http://localhost:8000';
-const API_BASE = import.meta.env.VITE_API_BASE || DEFAULT_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 const REQUEST_TIMEOUT_MS = 30000;
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
