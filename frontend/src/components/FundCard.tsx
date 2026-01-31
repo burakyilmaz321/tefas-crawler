@@ -1,5 +1,6 @@
 import { FundOverview } from '../types';
 import { calculateSharpeRatio, formatSharpeRatio } from '../utils/analytics';
+import { formatTry6 } from '../utils/format';
 
 interface Props {
   fund: FundOverview;
@@ -18,13 +19,6 @@ const FundCard = ({ fund, onRemove, color }: Props) => {
     ? calculateSharpeRatio(fund.priceHistory)
     : null;
 
-  // Format price with up to 6 decimals, remove trailing zeros
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('tr-TR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6
-    });
-  };
 
   return (
     <div className="card fund-card" style={color ? { borderLeftColor: color } : undefined}>
@@ -41,7 +35,7 @@ const FundCard = ({ fund, onRemove, color }: Props) => {
       </div>
 
       {latestPrice !== null && (
-        <div className="fund-card-price">{formatPrice(latestPrice)} ₺</div>
+        <div className="fund-card-price">{formatTry6(latestPrice)}</div>
       )}
 
       <div className="fund-card-title">{fund.title}</div>

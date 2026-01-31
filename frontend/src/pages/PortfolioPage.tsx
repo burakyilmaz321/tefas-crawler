@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchPortfolioValuation } from '../api';
+import { formatTry, formatTry6 } from '../utils/format';
 import { PortfolioHoldingInput, PortfolioValuation } from '../types';
 
 const STORAGE_KEY = 'portfolioHoldings';
@@ -121,11 +122,11 @@ const PortfolioPage = () => {
           <div className="section-title">Portföy Özeti</div>
           <div className="grid grid-3">
             <div>
-              <div className="metric-value">₺{valuation.totalValue.toFixed(2)}</div>
+              <div className="metric-value">{formatTry(valuation.totalValue)}</div>
               <div className="metric-label">Toplam Değer</div>
             </div>
             <div>
-              <div className="metric-value">₺{valuation.pnl.toFixed(2)}</div>
+              <div className="metric-value">{formatTry(valuation.pnl)}</div>
               <div className="metric-label">Kar/Zarar</div>
             </div>
             <div>
@@ -148,10 +149,10 @@ const PortfolioPage = () => {
                 {valuation.holdings.map((holding) => (
                   <tr key={holding.code}>
                     <td>{holding.code}</td>
-                    <td>{holding.latestPrice.toFixed(4)}</td>
-                    <td>₺{holding.value.toFixed(2)}</td>
+                    <td>{formatTry6(holding.latestPrice)}</td>
+                    <td>{formatTry(holding.value)}</td>
                     <td>{(holding.weight * 100).toFixed(1)}%</td>
-                    <td>₺{holding.pnl.toFixed(2)}</td>
+                    <td>{formatTry(holding.pnl)}</td>
                   </tr>
                 ))}
               </tbody>

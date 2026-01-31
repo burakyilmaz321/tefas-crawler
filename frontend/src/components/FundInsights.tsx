@@ -1,12 +1,13 @@
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
 import { HistoricalPoint } from '../types';
+import { formatTry } from '../utils/format';
 
 interface Props {
   marketCap: HistoricalPoint[];
   investors: HistoricalPoint[];
 }
 
-const numberFormatter = new Intl.NumberFormat('en-US');
+const numberFormatter = new Intl.NumberFormat('tr-TR');
 
 const FundInsights = ({ marketCap, investors }: Props) => {
   const merged = marketCap.map((point, index) => ({
@@ -41,7 +42,7 @@ const FundInsights = ({ marketCap, investors }: Props) => {
             <Tooltip
               formatter={(value: number, name) =>
                 name === 'marketCap'
-                  ? `${numberFormatter.format(Math.round(value))} ₺`
+                  ? formatTry(value)
                   : `${numberFormatter.format(Math.round(value))} investors`
               }
               labelFormatter={(value) => `Date: ${value}`}

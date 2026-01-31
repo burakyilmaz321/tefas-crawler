@@ -1,4 +1,5 @@
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import { formatTry6 } from '../utils/format';
 
 interface Props {
   data: any[];
@@ -19,17 +20,8 @@ const PerformanceChart = ({ data, metricLabel, selectedCodes, isNormalized, show
     if (isNormalized) return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-    if (value < 1) {
-      // For small values, show up to 4 decimals
-      return value.toLocaleString('tr-TR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4
-      });
-    }
-    return value.toLocaleString('tr-TR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    if (value < 1) return formatTry6(value);
+    return formatTry6(value);
   };
 
   return (
@@ -62,10 +54,7 @@ const PerformanceChart = ({ data, metricLabel, selectedCodes, isNormalized, show
                   formattedValue = `${value.toFixed(2)}%`;
                 } else {
                   // Use 6 decimals for prices, remove trailing zeros
-                  formattedValue = value.toLocaleString('tr-TR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 6
-                  });
+                  formattedValue = formatTry6(value);
                 }
                 const label = name.includes('_MA') ? name.replace('_', ' ') : name;
                 return [formattedValue, label];
