@@ -1,12 +1,12 @@
 """Data schema validation"""
 
 from tefas import Crawler
-from tefas.schema import InfoSchema, BreakdownSchema
+from tefas.schema import InfoSchema
 
 
 def test_data_schema():
-    """Make an API call to Tefas and validate all required fields are present"""
+    """Make a real API call to Tefas and validate columns match the schema."""
     crawler = Crawler()
-    df = crawler.fetch(start="2020-11-20")
-    all_fields = set(InfoSchema().fields).union(set(BreakdownSchema().fields))
-    assert all_fields == set(df.columns)
+    df = crawler.fetch(start="2025-04-01", end="2025-04-15", name="YAC")
+    assert set(InfoSchema().fields) == set(df.columns)
+    assert not df.empty

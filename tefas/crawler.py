@@ -1,64 +1,60 @@
 """Tefas Crawler
 
-Crawls public invenstment fund information from Turkey Electronic Fund Trading Platform.
+Crawls public investment fund information from Turkey Electronic Fund Trading
+Platform (TEFAS).
+
+The legacy ``BindHistoryInfo`` / ``BindHistoryAllocation`` endpoints on
+``fundturkey.com.tr`` were retired in 2026 and replaced by JSON endpoints under
+``https://www.tefas.gov.tr/api/funds/...``. The new API is structured per-fund
+with a months-back ``periyod`` parameter, NOT per-date with all-funds output.
+This crawler keeps the original ``fetch(start, end, name)`` signature, but when
+``name`` is omitted it has to fan out one HTTP call per fund — which is slow.
+A fund-count cap and a ``UserWarning`` keep that path from quietly hammering
+the API.
 """
 
-import ssl
-from datetime import datetime
-from typing import Dict, List, Optional, Union
+import math
+import warnings
+from datetime import date, datetime
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.poolmanager import PoolManager
-import time
 
-from tefas.schema import BreakdownSchema, InfoSchema
+from tefas.schema import InfoSchema
 
 
 class Crawler:
-    """Fetch public fund information from ``http://www.fundturkey.com.tr``.
+    """Fetch public fund information from ``https://www.tefas.gov.tr``.
 
     Examples:
 
     >>> tefas = Crawler()
-    >>> data = tefas.fetch(start="2020-11-20")
-    >>> data.head(1)
-           price  number_of_shares code  ... precious_metals  stock  private_sector_bond
-    0  41.302235         1898223.0  AAK  ...             0.0  31.14                 3.28
-    >>> data = tefas.fetch(name="YAC",
-    >>>                    start="2020-11-15",
-    >>>                    end="2020-11-20",
-    >>>                    columns=["date", "code", "price"])
+    >>> data = tefas.fetch(start="2025-04-01", end="2025-04-15", name="YAC")
     >>> data.head()
-             date code     price
-    0  2020-11-20  YAC  1.844274
-    1  2020-11-19  YAC  1.838618
-    2  2020-11-18  YAC  1.833198
-    3  2020-11-17  YAC  1.838440
-    4  2020-11-16  YAC  1.827832
+             date code  ...     price  category_rank  category_total
+    0  2025-04-01  YAC  ...
     """
 
-    root_url = "https://fundturkey.com.tr"
-    detail_endpoint = "/api/DB/BindHistoryAllocation"
-    info_endpoint = "/api/DB/BindHistoryInfo"
+    root_url = "https://www.tefas.gov.tr"
+    price_endpoint = "/api/funds/fonFiyatBilgiGetir"
+    list_endpoint = "/api/funds/fonGetiriBazliBilgiGetir"
     headers = {
-        "Connection": "keep-alive",
-        "X-Requested-With": "XMLHttpRequest",
         "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
         ),
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Origin": "https://fundturkey.com.tr",
-        "Referer": "https://fundturkey.com.tr/TarihselVeriler.aspx",
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/plain, */*",
     }
 
-    def __init__(self):
-        self.session = _get_session()
-        _ = self.session.get(self.root_url)
-        self.cookies = self.session.cookies.get_dict()
+    DEFAULT_FUND_LIMIT = 50
+
+    def __init__(self, fund_limit: int = DEFAULT_FUND_LIMIT):
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
+        self.fund_limit = fund_limit
 
     def fetch(
         self,
@@ -68,131 +64,138 @@ class Crawler:
         columns: Optional[List[str]] = None,
         kind: Optional[str] = "YAT",
     ) -> pd.DataFrame:
-        """Main entry point of the public API. Get fund information.
+        """Get fund price information.
 
-        Args:
-            start: The date that fund information is crawled for.
-            end: End of the period that fund information is crawled for. (optional)
-            name: Name of the fund. If not given, all funds will be returned. (optional)
-            columns: List of columns to be returned. (optional)
-            kind: Type of the fund. One of `YAT`, `EMK`, or `BYF`. Defaults to `YAT`. (optional)
-                - `YAT`: Securities Mutual Funds
-                - `EMK`: Pension Funds
-                - `BYF`: Exchange Traded Funds
+        When ``name`` is provided, hits the per-fund endpoint directly.
+        When ``name`` is None, lists funds of the requested ``kind`` and
+        fetches the first ``self.fund_limit`` of them — slow, and emits a
+        ``UserWarning``.
 
-        Returns:
-            A pandas DataFrame where each row is the information for a fund.
-
-        Raises:
-            ValueError if date format is wrong.
-        """  # noqa
-        assert kind in [
-            "YAT",
-            "EMK",
-            "BYF",
-        ], "`kind` should be one of `YAT`, `EMK`, or `BYF`"
+        Note: ``market_cap``, ``number_of_shares``, ``number_of_investors``
+        and the asset-allocation breakdown columns returned by the previous
+        version of this library are no longer exposed by the new
+        tefas.gov.tr API, so they are dropped from the output.
+        """
+        assert kind in ("YAT", "EMK", "BYF"), (
+            "`kind` should be one of `YAT`, `EMK`, or `BYF`"
+        )
         start_date = _parse_date(start)
         end_date = _parse_date(end or start)
-        data = {
-            "fontip": kind,
-            "bastarih": start_date,
-            "bittarih": end_date,
-            "fonkod": name.upper() if name else "",
-        }
+        period_months = _months_back(start_date)
 
-        # General info pane
-        info_schema = InfoSchema(many=True)
-        info = self._do_post(self.info_endpoint, data)
-        info = info_schema.load(info)
-        info = pd.DataFrame(info, columns=info_schema.fields.keys())
+        if name:
+            codes = [name.upper()]
+        else:
+            warnings.warn(
+                "`fetch` was called without `name`. The new tefas.gov.tr API "
+                "no longer supports a single bulk-by-date request, so this "
+                f"call fans out one HTTP request per fund and is capped at "
+                f"{self.fund_limit} funds (kind={kind}). Pass `name=<fund_code>`"
+                " for a fast, complete result, or raise the cap with "
+                "`Crawler(fund_limit=N)`.",
+                UserWarning,
+                stacklevel=2,
+            )
+            codes = self._list_fund_codes(kind)[: self.fund_limit]
 
-        # Portfolio breakdown pane
-        detail_schema = BreakdownSchema(many=True)
-        detail = self._do_post(self.detail_endpoint, data)
-        detail = detail_schema.load(detail)
-        detail = pd.DataFrame(detail, columns=detail_schema.fields.keys())
+        schema = InfoSchema(many=True)
+        frames = []
+        for code in codes:
+            payload = {"fonKodu": code, "dil": "TR", "periyod": period_months}
+            raw = self._do_post(self.price_endpoint, payload)
+            if not raw:
+                continue
+            rows = schema.load(raw)
+            frames.append(pd.DataFrame(rows, columns=schema.fields.keys()))
 
-        # Merge two panes
-        merged = pd.merge(info, detail, on=["code", "date"])
+        if not frames:
+            return pd.DataFrame(columns=list(InfoSchema().fields.keys()))
 
-        # Return only desired columns
-        merged = merged[columns] if columns else merged
+        merged = pd.concat(frames, ignore_index=True)
+        merged = merged[
+            (merged["date"] >= start_date) & (merged["date"] <= end_date)
+        ].reset_index(drop=True)
+
+        if columns:
+            available = [c for c in columns if c in merged.columns]
+            dropped = [c for c in columns if c not in merged.columns]
+            if dropped:
+                warnings.warn(
+                    "Columns no longer exposed by the tefas.gov.tr API and "
+                    f"omitted from the result: {dropped}",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            merged = merged[available]
 
         return merged
 
-    def _do_post(self, endpoint: str, data: Dict[str, str], attempt: int = 0) -> Dict[str, str]:
-        max_attempt = 5
-        try:
-            response = self.session.post(
-                url=f"{self.root_url}/{endpoint}",
-                data=data,
-                cookies=self.cookies,
-                headers=self.headers,
-            )
-            return response.json().get("data", {})
-        except ValueError:
-            if attempt == max_attempt:
-                raise Exception("Max attempt limit reached. Wait for a while before trying again")
-            attempt += 1
-            sleep_sec = attempt * 5
-            print("Stuck at rate limiting or robot check. Waiting for "+str(sleep_sec)+" seconds to retry. Attempt #"+str(attempt))
-            time.sleep(sleep_sec)
-            print("Trying..")
-            return self._do_post(endpoint, data, attempt)
+    def _do_post(self, endpoint: str, payload: dict) -> list:
+        response = self.session.post(
+            url=f"{self.root_url}{endpoint}",
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        body = response.json()
+        return body.get("resultList") or []
 
-def _parse_date(date: Union[str, datetime]) -> str:
-    if isinstance(date, datetime):
-        formatted = datetime.strftime(date, "%d.%m.%Y")
-    elif isinstance(date, str):
+    def _list_fund_codes(self, kind: str) -> List[str]:
+        payload = {
+            "dil": "TR",
+            "fonTipi": kind,
+            "kurucuKodu": None,
+            "sfonTurKod": None,
+            "fonTurAciklama": None,
+            "islem": 1,
+            "fonTurKod": None,
+            "fonGrubu": None,
+            "donemGetiri1a": "1",
+            "donemGetiri3a": "1",
+            "donemGetiri6a": "1",
+            "donemGetiri1y": "1",
+            "donemGetiriyb": "1",
+            "donemGetiri3y": "1",
+            "donemGetiri5y": "1",
+            "basTarih": None,
+            "bitTarih": None,
+            "calismaTipi": 2,
+            "getiriOrani": "1",
+        }
+        rows = self._do_post(self.list_endpoint, payload)
+        return [r["fonKodu"] for r in rows if r.get("fonKodu")]
+
+
+def _parse_date(value: Union[str, datetime, date]) -> date:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
         try:
-            parsed = datetime.strptime(date, "%Y-%m-%d")
+            return datetime.strptime(value, "%Y-%m-%d").date()
         except ValueError as exc:
             raise ValueError(
                 "Date string format is incorrect. It should be `YYYY-MM-DD`"
             ) from exc
-        else:
-            formatted = datetime.strftime(parsed, "%d.%m.%Y")
-    else:
-        raise ValueError(
-            "`date` should be a string like 'YYYY-MM-DD' "
-            "or a `datetime.datetime` object."
-        )
-    return formatted
+    raise ValueError(
+        "`date` should be a string like 'YYYY-MM-DD' "
+        "or a `datetime.datetime` object."
+    )
 
 
-def _get_session() -> requests.Session:
+_VALID_PERIODS = (1, 3, 6, 12, 36, 60)
+
+
+def _months_back(start: date) -> int:
+    """Snap the requested look-back to one of the periods the API actually
+    accepts. The endpoint enumerates ``{1, 3, 6, 12, 36, 60}`` months —
+    other values return ``Sistem Hatası!!``. Anything older than 5 years is
+    not retrievable.
     """
-    Create and return a custom requests session with a modified SSL context.
-
-    This function configures a custom SSL context to use the `OP_LEGACY_SERVER_CONNECT`
-    option, which allows for legacy server connections, addressing specific issues
-    with OpenSSL 3.0.0.
-
-    The custom session uses a custom HTTP adapter that incorporates this modified
-    SSL context for the session's connections.
-
-    This approach is based on solutions found at:
-    - https://stackoverflow.com/questions/71603314/ssl-error-unsafe-legacy-renegotiation-disabled/
-    - https://github.com/urllib3/urllib3/issues/2653
-    """
-
-    class CustomHttpAdapter(HTTPAdapter):
-        def __init__(self, ssl_context=None, **kwargs):
-            self.ssl_context = ssl_context
-            super().__init__(**kwargs)
-
-        def init_poolmanager(
-            self, connections, maxsize, block=False
-        ):  # pylint: disable=arguments-differ
-            self.poolmanager = PoolManager(
-                num_pools=connections,
-                maxsize=maxsize,
-                block=block,
-                ssl_context=self.ssl_context,
-            )
-
-    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
-    session = requests.session()
-    session.mount("https://", CustomHttpAdapter(ctx))
-    return session
+    delta_days = max(0, (date.today() - start).days)
+    months_needed = math.ceil(delta_days / 30) + 1
+    for period in _VALID_PERIODS:
+        if period >= months_needed:
+            return period
+    return _VALID_PERIODS[-1]

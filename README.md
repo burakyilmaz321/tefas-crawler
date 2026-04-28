@@ -6,7 +6,13 @@
 [![Package Status](https://img.shields.io/pypi/status/tefas-crawler)](https://pypi.org/project/tefas-crawler)
 [![CI Build](https://github.com/burakyilmaz321/tefas-crawler/workflows/Python%20package/badge.svg)](https://github.com/burakyilmaz321/tefas-crawler/actions)
 
-Crawl public invenstment fund information from [Turkey Electronic Fund Trading Platform](https://fundturkey.com.tr) (TEFAS) with ease.
+Crawl public investment fund information from [Turkey Electronic Fund Trading Platform](https://www.tefas.gov.tr) (TEFAS) with ease.
+
+> **Heads up — API rewrite (2026):** TEFAS retired the legacy `fundturkey.com.tr/api/DB/BindHistory*` endpoints. This library now talks to the new `tefas.gov.tr/api/funds/...` JSON API. The new backend exposes prices per-fund only, with a fixed look-back enum (`{1, 3, 6, 12, 36, 60}` months, max 5 years). As a result:
+>
+> - `fetch(start, end, name="YAC")` is fast and complete.
+> - `fetch(start)` with no `name` now fans out one HTTP request per fund and is **capped at 50 funds by default** with a `UserWarning`. Raise the cap with `Crawler(fund_limit=N)`.
+> - `market_cap`, `number_of_shares`, `number_of_investors` and the asset-allocation breakdown columns are no longer returned — the new API doesn't publish them as historical series. Calls that request these columns still run; missing columns are dropped with a warning.
 
 # Installation
 

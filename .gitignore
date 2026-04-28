@@ -67,3 +67,6 @@ target/
 
 # Virtual environments
 .venv
+.gstack/
+.playwright-mcp/
+uv.lock
